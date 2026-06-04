@@ -1,0 +1,50 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  up:
+    desc: Start Go Microservices Sandbox infrastructure in background
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Stop Go Microservices Sandbox infrastructure
+    cmds:
+      - docker compose down
+
+  run-order:
+    desc: Run the Go Order service
+    cmds:
+      - cd services/order && go run cmd/server/main.go
+
+  run-inventory:
+    desc: Run the Go Inventory service
+    cmds:
+      - cd services/inventory && go run cmd/server/main.go
+
+  run-payment:
+    desc: Run the Go Payment service
+    cmds:
+      - cd services/payment && go run cmd/server/main.go
+
+  run-notification:
+    desc: Run the Go Notification service
+    cmds:
+      - cd services/notification && go run cmd/server/main.go
+
+  run-audit:
+    desc: Run the Go Audit service
+    cmds:
+      - cd services/audit && go run cmd/server/main.go
+
+  compile-proto:
+    desc: Compile protobuf schemas for inventory service
+    cmds:
+      - rm -rf services/inventory/inventory
+      - rm -rf services/inventory/internal/handler/pb
+      - mkdir -p services/inventory/pkg/pb
+      - protoc --go_out=services/inventory --go_opt=module=inventory --go-grpc_out=services/inventory --go-grpc_opt=module=inventory services/inventory/api/v1/inventory.proto

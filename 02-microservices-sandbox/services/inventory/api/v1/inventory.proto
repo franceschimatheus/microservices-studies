@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+option go_package = "inventory/pkg/pb;pb";
+
+service InventoryService {
+  rpc CheckStock (CheckStockRequest) returns (CheckStockResponse);
+  rpc ReserveStock (ReserveStockRequest) returns (ReserveStockResponse);
+  rpc ReleaseStock (ReleaseStockRequest) returns (ReleaseStockResponse);
+}
+
+message CheckStockRequest {
+  string product_id = 1;
+}
+
+message CheckStockResponse {
+  string product_id = 1;
+  int32 stock = 2;
+}
+
+message ReserveStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+}
+
+message ReserveStockResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ReleaseStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+}
+
+message ReleaseStockResponse {
+  bool success = 1;
+  string message = 2;
+}

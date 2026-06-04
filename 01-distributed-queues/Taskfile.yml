@@ -9,29 +9,29 @@ tasks:
   up:
     desc: Start RabbitMQ container in background
     cmds:
-      - docker compose -f 01-distributed-queues/docker-compose.yml up -d
+      - docker compose up -d
 
   down:
     desc: Stop RabbitMQ container
     cmds:
-      - docker compose -f 01-distributed-queues/docker-compose.yml down
+      - docker compose down
 
   producer:
     desc: Run the Go producer service
     cmds:
-      - cd 01-distributed-queues/producer && go run main.go
+      - cd producer && go run main.go
 
   consumer:
     desc: Run the Go consumer service
     cmds:
-      - cd 01-distributed-queues/consumer && go run main.go
+      - cd consumer && go run main.go
 
   consumer-fast:
     desc: Run a silent, zero-latency consumer for maximum throughput benchmark
     cmds:
-      - cd 01-distributed-queues/consumer && go run main.go -verbose=false -simulate-work=true
+      - cd consumer && go run main.go -verbose=false -simulate-work=true
 
   stress:
     desc: Stress test the queue by publishing 5000 tasks at 1ms delay with 5 concurrency
     cmds:
-      - cd 01-distributed-queues/producer && go run main.go -count 5000 -delay 10ms -concurrency 5
+      - cd producer && go run main.go -count 5000 -delay 10ms -concurrency 5

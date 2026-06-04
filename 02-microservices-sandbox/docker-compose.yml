@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  order-db:
+    image: postgres:16-alpine
+    container_name: order-db-sandbox
+    environment:
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: order_pass
+      POSTGRES_DB: order_db
+    ports:
+      - "5431:5432"
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  inventory-db:
+    image: postgres:16-alpine
+    container_name: inventory-db-sandbox
+    environment:
+      POSTGRES_USER: inventory_user
+      POSTGRES_PASSWORD: inventory_pass
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventory-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-sandbox
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq-sandbox
+    ports:
+      - "5672:5672"       # AMQP protocol
+      - "15672:15672"     # Management Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=order
+    container_name: order-service-sandbox
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      - INVENTORY_ADDR=inventory-service:8082
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - BIND_ADDR=0.0.0.0:8081
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=inventory
+    container_name: inventory-service-sandbox
+    ports:
+      - "127.0.0.1:8082:8082"
+      - "127.0.0.1:8086:8086"
+    environment:
+      - BIND_ADDR=0.0.0.0:8082
+      - HTTP_BIND_ADDR=0.0.0.0:8086
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=payment
+    container_name: payment-service-sandbox
+    ports:
+      - "127.0.0.1:8083:8083"
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - BIND_ADDR=0.0.0.0:8083
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=notification
+    container_name: notification-service-sandbox
+    ports:
+      - "127.0.0.1:8084:8084"
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - BIND_ADDR=0.0.0.0:8084
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SERVICE_NAME=audit
+    container_name: audit-service-sandbox
+    ports:
+      - "127.0.0.1:8085:8085"
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - BIND_ADDR=0.0.0.0:8085
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  order-db-data:
+  inventory-db-data:

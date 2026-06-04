@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Start Next.js frontend development server
+    cmds:
+      - nix develop --command npm run dev
+
+  build:
+    desc: Build Next.js production bundle
+    cmds:
+      - nix develop --command npm run build
+
+  start:
+    desc: Start Next.js production server
+    cmds:
+      - nix develop --command npm run start
