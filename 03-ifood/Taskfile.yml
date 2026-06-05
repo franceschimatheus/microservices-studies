@@ -1,0 +1,32 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  compile-proto:
+    desc: Compile protobuf schemas for microservices
+    cmds:
+      - protoc --go_out=apps/auth-service --go_opt=module=auth-service --go-grpc_out=apps/auth-service --go-grpc_opt=module=auth-service apps/auth-service/pb/auth.proto
+
+  up:
+    desc: Start all services and infra using docker-compose
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Stop all services and infra
+    cmds:
+      - docker compose down
+
+  run-auth:
+    desc: Run the Go Auth service locally
+    cmds:
+      - cd apps/auth-service && go run cmd/server/main.go
+
+  run-gateway:
+    desc: Run the Go Gateway service locally
+    cmds:
+      - cd apps/gateway && go run cmd/server/main.go
