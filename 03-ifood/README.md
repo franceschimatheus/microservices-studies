@@ -650,18 +650,18 @@ loki
 
 ## Phase 2 — Domain Core
 
-- restaurant service
-- cart service
-- order service
+- [x] restaurant service
+- [x] cart service
+- [x] order service
 
 ---
 
 ## Phase 3 — Event Architecture
 
-- RabbitMQ exchanges
-- payment consumers
-- notification consumers
-- delivery workers
+- [x] RabbitMQ exchanges
+- [x] payment consumers
+- [ ] notification consumers
+- [ ] delivery workers
 
 ---
 
