@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -42,14 +43,14 @@ func TracingAndMetrics(serviceName string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
-		path := c.Route().Path
-		if path == "" {
-			path = c.Path()
-		}
-		// Skip metrics/tracing for observability endpoints
-		if path == "/metrics" {
+		initialPath := c.Path()
+		// Skip metrics/tracing for observability and static endpoints
+		if initialPath == "/metrics" || initialPath == "/favicon.ico" {
 			return c.Next()
 		}
+
+		// Immutable copy of request method to prevent mutation after recycling
+		method := string(c.Request().Header.Method())
 
 		// Convert Fiber headers map to a format propagation expects
 		headers := make(map[string]string)
@@ -60,12 +61,11 @@ func TracingAndMetrics(serviceName string) fiber.Handler {
 		// Extract trace context from incoming HTTP headers
 		ctx := otel.GetTextMapPropagator().Extract(c.UserContext(), propagation.MapCarrier(headers))
 
-		// Start span
-		ctx, span := tracer.Start(ctx, c.Method()+" "+path,
+		// Start span with initial request path
+		ctx, span := tracer.Start(ctx, method+" "+initialPath,
 			trace.WithSpanKind(trace.SpanKindServer),
 			trace.WithAttributes(
-				semconv.HTTPMethodKey.String(c.Method()),
-				semconv.HTTPRouteKey.String(path),
+				semconv.HTTPMethodKey.String(method),
 				semconv.HTTPURLKey.String(c.OriginalURL()),
 			),
 		)
@@ -83,6 +83,16 @@ func TracingAndMetrics(serviceName string) fiber.Handler {
 		// Execute request
 		err := c.Next()
 
+		// Resolve actual matched route path after handler execution
+		matchedPath := c.Route().Path
+		if matchedPath == "" {
+			matchedPath = initialPath
+		}
+
+		// Update span name and HTTP route attribute
+		span.SetName(method + " " + matchedPath)
+		span.SetAttributes(semconv.HTTPRouteKey.String(matchedPath))
+
 		// Record status and metrics
 		status := c.Response().StatusCode()
 		if err != nil {
@@ -93,6 +103,21 @@ func TracingAndMetrics(serviceName string) fiber.Handler {
 			}
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
+		} else if status >= 500 {
+			span.SetStatus(codes.Error, "HTTP request failed with status " + strconv.Itoa(status))
+		}
+
+		if err != nil || status >= 500 {
+			errMsg := "internal server error"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			slog.ErrorContext(ctx, "Gateway HTTP Request Failure",
+				slog.String("method", method),
+				slog.String("path", matchedPath),
+				slog.Int("status", status),
+				slog.String("error", errMsg),
+			)
 		}
 
 		span.SetAttributes(semconv.HTTPStatusCodeKey.Int(status))
@@ -100,8 +125,8 @@ func TracingAndMetrics(serviceName string) fiber.Handler {
 		duration := time.Since(start).Seconds()
 		statusStr := strconv.Itoa(status)
 
-		httpRequestsTotal.WithLabelValues(path, c.Method(), statusStr).Inc()
-		httpRequestDuration.WithLabelValues(path, c.Method(), statusStr).Observe(duration)
+		httpRequestsTotal.WithLabelValues(matchedPath, method, statusStr).Inc()
+		httpRequestDuration.WithLabelValues(matchedPath, method, statusStr).Observe(duration)
 
 		return err
 	}

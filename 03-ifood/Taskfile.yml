@@ -11,11 +11,13 @@ tasks:
     cmds:
       - protoc --go_out=apps/auth-service --go_opt=module=auth-service --go-grpc_out=apps/auth-service --go-grpc_opt=module=auth-service apps/auth-service/pb/auth.proto
       - protoc --go_out=apps/restaurant-service --go_opt=module=restaurant-service --go-grpc_out=apps/restaurant-service --go-grpc_opt=module=restaurant-service apps/restaurant-service/pb/restaurant.proto
+      - protoc --go_out=apps/cart-service --go_opt=module=cart-service --go-grpc_out=apps/cart-service --go-grpc_opt=module=cart-service apps/cart-service/pb/cart.proto
+      - protoc --go_out=apps/order-service --go_opt=module=order-service --go-grpc_out=apps/order-service --go-grpc_opt=module=order-service apps/order-service/pb/order.proto
 
   up:
     desc: Start all services and infra using docker-compose
     cmds:
-      - docker compose up -d
+      - docker compose up --build -d
 
   down:
     desc: Stop all services and infra

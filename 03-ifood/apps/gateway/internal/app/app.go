@@ -11,12 +11,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "auth-service/pb"
 	"gateway/internal/config"
 	"gateway/internal/handler"
 	"gateway/internal/middleware"
 	"logger"
 	"observability"
+
+	authpb "auth-service/pb"
+	cartpb "cart-service/pb"
+	orderpb "order-service/pb"
 	respb "restaurant-service/pb"
 )
 
@@ -25,6 +28,8 @@ type App struct {
 	fiberApp       *fiber.App
 	authConn       *grpc.ClientConn
 	restaurantConn *grpc.ClientConn
+	cartConn       *grpc.ClientConn
+	orderConn      *grpc.ClientConn
 	otelShutdown   func(context.Context) error
 }
 
@@ -49,7 +54,7 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to connect to Auth Service: %w", err)
 	}
 
-	authClient := pb.NewAuthServiceClient(conn)
+	authClient := authpb.NewAuthServiceClient(conn)
 	authHandler := handler.NewAuthHandler(authClient)
 
 	// Connect to Restaurant Service via gRPC with OTel client instrumentation
@@ -64,6 +69,35 @@ func New(cfg *config.Config) (*App, error) {
 
 	restaurantClient := respb.NewRestaurantServiceClient(restaurantConn)
 	restaurantHandler := handler.NewRestaurantHandler(restaurantClient)
+
+	// Connect to Cart Service via gRPC with OTel client instrumentation
+	cartConn, err := grpc.NewClient(cfg.CartServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		observability.GRPCClientStatsHandler(),
+	)
+	if err != nil {
+		conn.Close()
+		restaurantConn.Close()
+		return nil, fmt.Errorf("failed to connect to Cart Service: %w", err)
+	}
+
+	cartClient := cartpb.NewCartServiceClient(cartConn)
+	cartHandler := handler.NewCartHandler(cartClient, authClient)
+
+	// Connect to Order Service via gRPC with OTel client instrumentation
+	orderConn, err := grpc.NewClient(cfg.OrderServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		observability.GRPCClientStatsHandler(),
+	)
+	if err != nil {
+		conn.Close()
+		restaurantConn.Close()
+		cartConn.Close()
+		return nil, fmt.Errorf("failed to connect to Order Service: %w", err)
+	}
+
+	orderClient := orderpb.NewOrderServiceClient(orderConn)
+	orderHandler := handler.NewOrderHandler(orderClient, cartClient, authClient)
 
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -87,7 +121,7 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://127.0.0.1:3000, http://localhost:3000",
 		AllowHeaders:     "Origin, Content-Type, Accept, X-Correlation-ID",
-		AllowMethods:     "GET,POST,OPTIONS",
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowCredentials: true,
 	}))
 
@@ -103,15 +137,30 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Post("/auth/signin", authHandler.SignIn)
 	fiberApp.Get("/auth/me", authHandler.Me)
 	fiberApp.Post("/auth/signout", authHandler.SignOut)
+	fiberApp.Get("/favicon.ico", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent)
+	})
 
 	fiberApp.Get("/restaurants", restaurantHandler.ListRestaurants)
 	fiberApp.Post("/restaurants", restaurantHandler.CreateRestaurant)
+
+	fiberApp.Get("/cart", cartHandler.GetCart)
+	fiberApp.Post("/cart/items", cartHandler.AddItem)
+	fiberApp.Delete("/cart/items/:itemId", cartHandler.RemoveItem)
+	fiberApp.Delete("/cart", cartHandler.ClearCart)
+
+	fiberApp.Post("/orders", orderHandler.CreateOrder)
+	fiberApp.Get("/orders", orderHandler.ListOrders)
+	fiberApp.Get("/orders/:id", orderHandler.GetOrder)
+	fiberApp.Put("/orders/:id/status", orderHandler.UpdateOrderStatus)
 
 	return &App{
 		cfg:            cfg,
 		fiberApp:       fiberApp,
 		authConn:       conn,
 		restaurantConn: restaurantConn,
+		cartConn:       cartConn,
+		orderConn:      orderConn,
 		otelShutdown:   otelShutdown,
 	}, nil
 }
@@ -135,6 +184,16 @@ func (a *App) Close() {
 	if a.restaurantConn != nil {
 		if err := a.restaurantConn.Close(); err != nil {
 			slog.Error("Error closing Restaurant Service gRPC connection", "error", err)
+		}
+	}
+	if a.cartConn != nil {
+		if err := a.cartConn.Close(); err != nil {
+			slog.Error("Error closing Cart Service gRPC connection", "error", err)
+		}
+	}
+	if a.orderConn != nil {
+		if err := a.orderConn.Close(); err != nil {
+			slog.Error("Error closing Order Service gRPC connection", "error", err)
 		}
 	}
 	if a.otelShutdown != nil {

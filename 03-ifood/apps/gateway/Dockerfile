@@ -6,6 +6,8 @@ WORKDIR /app
 COPY go.work ./
 COPY apps/auth-service/ ./apps/auth-service/
 COPY apps/restaurant-service/ ./apps/restaurant-service/
+COPY apps/cart-service/ ./apps/cart-service/
+COPY apps/order-service/ ./apps/order-service/
 COPY apps/gateway/ ./apps/gateway/
 COPY apps/logger/ ./apps/logger/
 COPY apps/observability/ ./apps/observability/

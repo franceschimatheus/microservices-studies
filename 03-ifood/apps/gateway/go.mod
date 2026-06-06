@@ -4,6 +4,7 @@ go 1.26.3
 
 require (
 	auth-service v0.0.0-00010101000000-000000000000
+	cart-service v0.0.0-00010101000000-000000000000
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/prometheus/client_golang v1.23.2
 	go.opentelemetry.io/otel v1.43.0
@@ -11,6 +12,7 @@ require (
 	google.golang.org/grpc v1.81.1
 	logger v0.0.0-00010101000000-000000000000
 	observability v0.0.0-00010101000000-000000000000
+	order-service v0.0.0-00010101000000-000000000000
 	restaurant-service v0.0.0-00010101000000-000000000000
 )
 
@@ -53,7 +55,9 @@ require (
 
 replace (
 	auth-service => ../auth-service
+	cart-service => ../cart-service
 	logger => ../logger
 	observability => ../observability
+	order-service => ../order-service
 	restaurant-service => ../restaurant-service
 )

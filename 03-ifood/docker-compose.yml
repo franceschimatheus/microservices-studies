@@ -21,6 +21,15 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight-ifood
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq-ifood
@@ -80,6 +89,53 @@ services:
       - jaeger
     restart: unless-stopped
 
+  cart-service:
+    build:
+      context: .
+      dockerfile: apps/cart-service/Dockerfile
+    container_name: cart-service-ifood
+    ports:
+      - "127.0.0.1:50053:50053"
+    environment:
+      - PORT=50053
+      - BIND_ADDR=0.0.0.0:50053
+      - REDIS_ADDR=redis:6379
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
+    depends_on:
+      - redis
+      - jaeger
+    restart: unless-stopped
+
+  postgres-order:
+    image: postgres:16-alpine
+    container_name: postgres-order-ifood
+    environment:
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: order_password
+      POSTGRES_DB: order_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-order-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    container_name: order-service-ifood
+    ports:
+      - "127.0.0.1:50054:50054"
+    environment:
+      - PORT=50054
+      - BIND_ADDR=0.0.0.0:50054
+      - DB_DSN=postgres://order_user:order_password@postgres-order:5432/order_db?sslmode=disable
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
+    depends_on:
+      - postgres-order
+      - jaeger
+    restart: unless-stopped
+
   gateway:
     build:
       context: .
@@ -92,10 +148,14 @@ services:
       - BIND_ADDR=0.0.0.0:8080
       - AUTH_SERVICE_ADDR=auth-service:50051
       - RESTAURANT_SERVICE_ADDR=restaurant-service:50052
+      - CART_SERVICE_ADDR=cart-service:50053
+      - ORDER_SERVICE_ADDR=order-service:50054
       - OTEL_COLLECTOR_ADDR=jaeger:4317
     depends_on:
       - auth-service
       - restaurant-service
+      - cart-service
+      - order-service
       - jaeger
     restart: unless-stopped
 
@@ -137,8 +197,9 @@ services:
     restart: unless-stopped
 
   promtail:
-    image: grafana/promtail:2.9.4
+    image: grafana/promtail:3.0.0
     container_name: promtail-ifood
+    user: "root"
     volumes:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -166,3 +227,4 @@ services:
 volumes:
   postgres-auth-data:
   postgres-restaurant-data:
+  postgres-order-data:
