@@ -677,11 +677,11 @@ loki
 ## Phase 5 — Observability
 
 - [x] tracing (OpenTelemetry + Jaeger integration)
-- [x] metrics (Prometheus scraping on Gateway and Auth-Service)
+- [x] metrics (Prometheus scraping on Gateway, Auth, Restaurant, Order, and Cart services with Postgres/Redis connection pool stats)
 - [x] dashboards (Grafana with Loki, Jaeger, and Prometheus datasources)
 - [x] log aggregation (Loki + Promtail container log shipping)
 
-*Note: Completed for gateway, auth-service, and web dashboards.*
+*Note: Completed for gateway, auth-service, restaurant-service, order-service, cart-service, and web dashboards.*
 
 ---
 
