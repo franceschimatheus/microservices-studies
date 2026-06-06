@@ -5,8 +5,10 @@ use (
 	./apps/cart-service
 	./apps/gateway
 	./apps/order-service
+	./apps/payment-service
 	./apps/restaurant-service
 	./infra/logger
 	./infra/observability
 	./infra/prometheus
+	./infra/rabbitmq
 )

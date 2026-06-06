@@ -14,12 +14,12 @@ type Config struct {
 func Load() *Config {
 	bindAddr := os.Getenv("BIND_ADDR")
 	if bindAddr == "" {
-		bindAddr = "127.0.0.1:50054"
+		bindAddr = "127.0.0.1:50055"
 	}
 
 	dbDSN := os.Getenv("DB_DSN")
 	if dbDSN == "" {
-		dbDSN = "postgres://order_user:order_password@127.0.0.1:5434/order_db?sslmode=disable"
+		dbDSN = "postgres://payment_user:payment_password@127.0.0.1:5435/payment_db?sslmode=disable"
 	}
 
 	otelCollectorAddr := os.Getenv("OTEL_COLLECTOR_ADDR")

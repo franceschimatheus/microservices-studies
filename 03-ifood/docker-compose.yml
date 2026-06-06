@@ -119,6 +119,19 @@ services:
       - postgres-order-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  postgres-payment:
+    image: postgres:16-alpine
+    container_name: postgres-payment-ifood
+    environment:
+      POSTGRES_USER: payment_user
+      POSTGRES_PASSWORD: payment_password
+      POSTGRES_DB: payment_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-payment-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   order-service:
     build:
       context: .
@@ -131,9 +144,30 @@ services:
       - BIND_ADDR=0.0.0.0:50054
       - DB_DSN=postgres://order_user:order_password@postgres-order:5432/order_db?sslmode=disable
       - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - postgres-order
       - jaeger
+      - rabbitmq
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: payment-service-ifood
+    ports:
+      - "127.0.0.1:50055:50055"
+    environment:
+      - PORT=50055
+      - BIND_ADDR=0.0.0.0:50055
+      - DB_DSN=postgres://payment_user:payment_password@postgres-payment:5432/payment_db?sslmode=disable
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - postgres-payment
+      - jaeger
+      - rabbitmq
     restart: unless-stopped
 
   gateway:
@@ -245,3 +279,4 @@ volumes:
   postgres-auth-data:
   postgres-restaurant-data:
   postgres-order-data:
+  postgres-payment-data:

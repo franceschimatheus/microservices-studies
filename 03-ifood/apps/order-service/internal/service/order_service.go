@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 
 	"order-service/internal/domain"
+	"rabbitmq"
 )
 
 type OrderService interface {
@@ -17,11 +19,15 @@ type OrderService interface {
 }
 
 type OrderServiceImpl struct {
-	repo domain.OrderRepository
+	repo         domain.OrderRepository
+	rabbitClient *rabbitmq.Client
 }
 
-func NewOrderService(repo domain.OrderRepository) *OrderServiceImpl {
-	return &OrderServiceImpl{repo: repo}
+func NewOrderService(repo domain.OrderRepository, rabbitClient *rabbitmq.Client) *OrderServiceImpl {
+	return &OrderServiceImpl{
+		repo:         repo,
+		rabbitClient: rabbitClient,
+	}
 }
 
 func (s *OrderServiceImpl) CreateOrder(ctx context.Context, userID, restaurantID string, items []domain.OrderItem) (*domain.Order, error) {
@@ -62,6 +68,24 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, userID, restaurantID
 	}
 
 	slog.InfoContext(ctx, "order created successfully", "order_id", order.ID, "total_price", order.TotalPrice)
+
+	// Publish order.created event to RabbitMQ
+	eventPayload := map[string]any{
+		"order_id": order.ID,
+		"total":    order.TotalPrice,
+	}
+	payloadBytes, err := json.Marshal(eventPayload)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to marshal order.created event", "error", err)
+	} else {
+		err = s.rabbitClient.Publish(ctx, "orders.exchange", "order.created", payloadBytes)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to publish order.created event", "error", err)
+		} else {
+			slog.InfoContext(ctx, "order.created event published", "order_id", order.ID)
+		}
+	}
+
 	return order, nil
 }
 

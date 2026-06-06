@@ -62,7 +62,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
             <h3 className="text-lg font-bold mb-2">Service Metrics (Grafana)</h3>
             <p className="text-slate-400 text-xs mb-6 leading-relaxed">
@@ -94,9 +94,24 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
+            <h3 className="text-lg font-bold mb-2">Message Broker (RabbitMQ)</h3>
+            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+              Inspect message exchanges, queue depths, subscriber bindings, and track event throughput.
+            </p>
+            <a 
+              href="http://localhost:15672" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+            >
+              Open RabbitMQ 🐇
+            </a>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
             <h3 className="text-lg font-bold mb-2">Raw Metrics (Prometheus)</h3>
             <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Query Prometheus time-series metrics directly or inspect raw service endpoints.
+              Query Prometheus time-series time metrics directly or inspect raw service endpoints.
             </p>
             <div className="flex gap-2.5">
               <a 

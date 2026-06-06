@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"time"
 
@@ -12,16 +11,14 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
 
-	"order-service/internal/config"
-	"order-service/internal/handler"
-	"order-service/internal/repository"
-	"order-service/internal/service"
-	"order-service/migrations"
-	pb "order-service/pb"
 	"logger"
 	"observability"
+	"payment-service/internal/config"
+	"payment-service/internal/handler"
+	"payment-service/internal/repository"
+	"payment-service/internal/service"
+	"payment-service/migrations"
 	"prometheus"
 	"rabbitmq"
 )
@@ -29,19 +26,18 @@ import (
 type App struct {
 	cfg          *config.Config
 	db           *pgxpool.Pool
-	gRPCServer   *grpc.Server
 	otelShutdown func(context.Context) error
 	rabbitClient *rabbitmq.Client
 }
 
 func New(cfg *config.Config) (*App, error) {
 	// Initialize structured logging
-	logger.InitLogger("order-service", nil)
+	logger.InitLogger("payment-service", nil)
 	slog.Info("Logger initialized")
 
 	// Initialize tracing
 	ctx := context.Background()
-	_, otelShutdown, err := observability.InitTracer(ctx, "order-service", cfg.OtelCollectorAddr)
+	_, otelShutdown, err := observability.InitTracer(ctx, "payment-service", cfg.OtelCollectorAddr)
 	if err != nil {
 		slog.Error("Failed to initialize tracer", "error", err)
 	}
@@ -74,9 +70,9 @@ func New(cfg *config.Config) (*App, error) {
 	}
 
 	// Register DB stats collector
-	registerDBMetrics(pool, "order")
+	registerDBMetrics(pool, "payment")
 
-	// Initialize RabbitMQ Client and connect (auto-declares exchanges)
+	// Initialize RabbitMQ Client and connect
 	rabbitClient := rabbitmq.NewClient(cfg.RabbitMQURL)
 	if err := rabbitClient.Connect(); err != nil {
 		slog.Error("Failed to connect to RabbitMQ on startup", "error", err)
@@ -116,55 +112,34 @@ func (a *App) Run() error {
 		return fmt.Errorf("migration failure: %w", err)
 	}
 
-	// 2. Setup gRPC Listener
-	lis, err := net.Listen("tcp", a.cfg.BindAddr)
-	if err != nil {
-		return fmt.Errorf("failed to listen on %s: %w", a.cfg.BindAddr, err)
-	}
-
-	// 3. Start Prometheus metrics server on a separate port (9094)
+	// 2. Start Prometheus metrics server on port 9095
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", prometheus.MetricsHandler())
-		slog.Info("Starting order-service Prometheus metrics server", "addr", ":9094")
-		if err := http.ListenAndServe(":9094", mux); err != nil {
+		slog.Info("Starting payment-service Prometheus metrics server", "addr", ":9095")
+		if err := http.ListenAndServe(":9095", mux); err != nil {
 			slog.Error("Failed to run metrics server", "error", err)
 		}
 	}()
 
-	// 4. Wire Component Layer (Clean Architecture)
-	orderRepo := repository.NewPostgresOrderRepository(a.db)
-	orderServ := service.NewOrderService(orderRepo, a.rabbitClient)
-	grpcHandler := handler.NewGrpcOrderHandler(orderServ)
-	paymentConsumer := handler.NewPaymentConsumer(orderServ)
+	// 3. Setup components and RabbitMQ subscriber
+	repo := repository.NewPostgresPaymentRepository(a.db)
+	payService := service.NewPaymentServiceImpl()
+	payHandler := handler.NewPaymentHandler(repo, payService, a.rabbitClient)
 
 	ctx := context.Background()
-	// Subscribe to payment.completed
-	err = a.rabbitClient.Subscribe(ctx, "order.payment-completed.queue", "payments.exchange", "payment.completed", paymentConsumer.HandlePaymentCompleted)
+	err := a.rabbitClient.Subscribe(ctx, "payment.order-created.queue", "orders.exchange", "order.created", payHandler.HandleOrderCreated)
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to payment.completed: %w", err)
+		return fmt.Errorf("failed to subscribe to order.created: %w", err)
 	}
 
-	// Subscribe to payment.failed
-	err = a.rabbitClient.Subscribe(ctx, "order.payment-failed.queue", "payments.exchange", "payment.failed", paymentConsumer.HandlePaymentFailed)
-	if err != nil {
-		return fmt.Errorf("failed to subscribe to payment.failed: %w", err)
-	}
-
-	// Add OTel server handler for tracing propagation
-	a.gRPCServer = grpc.NewServer(
-		observability.GRPCServerStatsHandler(),
-	)
-	pb.RegisterOrderServiceServer(a.gRPCServer, grpcHandler)
-
-	slog.Info("Order Service is running", "bind_addr", a.cfg.BindAddr)
-	return a.gRPCServer.Serve(lis)
+	slog.Info("Payment Service is running and listening to queue 'payment.order-created.queue'")
+	
+	// Keep the main thread alive since this is a consumer-only service (no gRPC listener needed yet)
+	select {}
 }
 
 func (a *App) Close() {
-	if a.gRPCServer != nil {
-		a.gRPCServer.GracefulStop()
-	}
 	if a.db != nil {
 		a.db.Close()
 	}
