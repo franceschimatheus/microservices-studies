@@ -204,6 +204,19 @@ services:
       - gateway
     restart: unless-stopped
 
+  simulator:
+    build:
+      context: .
+      dockerfile: apps/simulator/Dockerfile
+    container_name: simulator-ifood
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+      - CONCURRENT_USERS=5
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+
   jaeger:
     image: jaegertracing/all-in-one:1.55
     container_name: jaeger-ifood
@@ -269,8 +282,13 @@ services:
     depends_on:
       grafana:
         condition: service_healthy
+    entrypoint: ["sh", "-c"]
     command: >
-      -s -X POST -H "Content-Type: application/json" -d @/etc/grafana-playlist/playlist.json http://admin:admin@grafana:3000/api/playlists
+      "playlists=$$(curl -s http://admin:admin@grafana:3000/api/playlists);
+      for uid in $$(echo \"$$playlists\" | grep -o '\"uid\":\"[^\"]*\"' | cut -d'\"' -f4); do
+        curl -s -X DELETE http://admin:admin@grafana:3000/api/playlists/$$uid;
+      done;
+      curl -s -X POST -H 'Content-Type: application/json' -d @/etc/grafana-playlist/playlist.json http://admin:admin@grafana:3000/api/playlists"
     volumes:
       - ./infra/grafana/playlist.json:/etc/grafana-playlist/playlist.json
     restart: "no"

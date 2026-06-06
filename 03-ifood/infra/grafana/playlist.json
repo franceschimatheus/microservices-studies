@@ -1,4 +1,5 @@
 {
+  "uid": "microservices-playlist",
   "name": "Microservices Playlist",
   "interval": "10s",
   "items": [
@@ -31,6 +32,11 @@
       "type": "dashboard_by_uid",
       "value": "order-service-perf",
       "order": 6
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "payment-service-perf",
+      "order": 7
     }
   ]
 }
