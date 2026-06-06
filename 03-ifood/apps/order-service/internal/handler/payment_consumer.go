@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"go.opentelemetry.io/otel"
+
 	"order-service/internal/service"
 )
 
@@ -27,6 +29,10 @@ func NewPaymentConsumer(orderService service.OrderService) *PaymentConsumer {
 }
 
 func (h *PaymentConsumer) HandlePaymentCompleted(ctx context.Context, body []byte) error {
+	tr := otel.Tracer("order-service")
+	ctx, span := tr.Start(ctx, "HandlePaymentCompleted")
+	defer span.End()
+
 	var event PaymentCompletedEvent
 	if err := json.Unmarshal(body, &event); err != nil {
 		slog.ErrorContext(ctx, "Failed to unmarshal payment.completed event", "error", err)
@@ -45,6 +51,10 @@ func (h *PaymentConsumer) HandlePaymentCompleted(ctx context.Context, body []byt
 }
 
 func (h *PaymentConsumer) HandlePaymentFailed(ctx context.Context, body []byte) error {
+	tr := otel.Tracer("order-service")
+	ctx, span := tr.Start(ctx, "HandlePaymentFailed")
+	defer span.End()
+
 	var event PaymentFailedEvent
 	if err := json.Unmarshal(body, &event); err != nil {
 		slog.ErrorContext(ctx, "Failed to unmarshal payment.failed event", "error", err)

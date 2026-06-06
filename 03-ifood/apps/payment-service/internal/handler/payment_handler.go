@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
 
 	"payment-service/internal/domain"
 	"rabbitmq"
@@ -43,6 +44,10 @@ func NewPaymentHandler(repo domain.PaymentRepository, payService domain.PaymentS
 }
 
 func (h *PaymentHandler) HandleOrderCreated(ctx context.Context, body []byte) error {
+	tr := otel.Tracer("payment-service")
+	ctx, span := tr.Start(ctx, "HandleOrderCreated")
+	defer span.End()
+
 	var event OrderCreatedEvent
 	if err := json.Unmarshal(body, &event); err != nil {
 		slog.ErrorContext(ctx, "Failed to unmarshal order.created event", "error", err)
