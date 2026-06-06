@@ -1,0 +1,36 @@
+{
+  "name": "Microservices Playlist",
+  "interval": "10s",
+  "items": [
+    {
+      "type": "dashboard_by_uid",
+      "value": "main-overview",
+      "order": 1
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "gateway-perf",
+      "order": 2
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "auth-service-perf",
+      "order": 3
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "restaurant-service-perf",
+      "order": 4
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "cart-service-perf",
+      "order": 5
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "order-service-perf",
+      "order": 6
+    }
+  ]
+}

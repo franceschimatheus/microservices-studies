@@ -9,8 +9,9 @@ COPY apps/restaurant-service/ ./apps/restaurant-service/
 COPY apps/cart-service/ ./apps/cart-service/
 COPY apps/order-service/ ./apps/order-service/
 COPY apps/gateway/ ./apps/gateway/
-COPY apps/logger/ ./apps/logger/
-COPY apps/observability/ ./apps/observability/
+COPY infra/logger/ ./infra/logger/
+COPY infra/observability/ ./infra/observability/
+COPY infra/prometheus/ ./infra/prometheus/
 
 # Build service
 WORKDIR /app/apps/gateway

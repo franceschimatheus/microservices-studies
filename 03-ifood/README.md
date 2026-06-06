@@ -69,9 +69,7 @@ Payment Notification Delivery Analytics SearchIndexer
 ```text
 /apps
   /web (Unified Next.js UI)
-
   /gateway
-
   /auth-service
   /restaurant-service
   /cart-service
@@ -82,23 +80,12 @@ Payment Notification Delivery Analytics SearchIndexer
   /search-service
   /analytics-service
 
-/packages
-  /protobuf
-  /events
-  /observability
-  /config
-  /logger
-  /grpc
-  /auth
-  /database
-
 /infra
-  /docker
+  /logger
+  /observability
   /prometheus
   /grafana
   /loki
-  /rabbitmq
-  /opensearch
 
 /docs
 ```

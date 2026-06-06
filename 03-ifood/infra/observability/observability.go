@@ -3,9 +3,7 @@ package observability
 import (
 	"context"
 	"fmt"
-	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -64,7 +62,3 @@ func GRPCServerStatsHandler() grpc.ServerOption {
 	return grpc.StatsHandler(otelgrpc.NewServerHandler())
 }
 
-// MetricsHandler returns the HTTP handler for Prometheus metrics.
-func MetricsHandler() http.Handler {
-	return promhttp.Handler()
-}

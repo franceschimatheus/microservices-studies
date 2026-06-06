@@ -13,6 +13,7 @@ require (
 	logger v0.0.0-00010101000000-000000000000
 	observability v0.0.0-00010101000000-000000000000
 	order-service v0.0.0-00010101000000-000000000000
+	prometheus v0.0.0-00010101000000-000000000000
 	restaurant-service v0.0.0-00010101000000-000000000000
 )
 
@@ -24,7 +25,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -43,7 +44,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.34.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
-	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
@@ -56,8 +57,9 @@ require (
 replace (
 	auth-service => ../auth-service
 	cart-service => ../cart-service
-	logger => ../logger
-	observability => ../observability
+	logger => ../../infra/logger
+	observability => ../../infra/observability
 	order-service => ../order-service
+	prometheus => ../../infra/prometheus
 	restaurant-service => ../restaurant-service
 )

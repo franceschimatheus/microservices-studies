@@ -18,6 +18,7 @@ import (
 	pb "cart-service/pb"
 	"logger"
 	"observability"
+	"prometheus"
 )
 
 type App struct {
@@ -52,6 +53,9 @@ func New(cfg *config.Config) (*App, error) {
 	}
 	slog.Info("Connected to Redis successfully", "addr", cfg.RedisAddr)
 
+	// Register Redis pool metrics
+	registerRedisMetrics(rdb, "cart")
+
 	return &App{
 		cfg:          cfg,
 		redisClient:  rdb,
@@ -69,7 +73,7 @@ func (a *App) Run() error {
 	// 2. Start Prometheus metrics server on port 9093
 	go func() {
 		mux := http.NewServeMux()
-		mux.Handle("/metrics", observability.MetricsHandler())
+		mux.Handle("/metrics", prometheus.MetricsHandler())
 		slog.Info("Starting cart-service Prometheus metrics server", "addr", ":9093")
 		if err := http.ListenAndServe(":9093", mux); err != nil {
 			slog.Error("Failed to run metrics server", "error", err)

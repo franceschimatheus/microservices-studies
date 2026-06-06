@@ -16,6 +16,8 @@ import (
 	"gateway/internal/middleware"
 	"logger"
 	"observability"
+	"prometheus"
+
 
 	authpb "auth-service/pb"
 	cartpb "cart-service/pb"
@@ -130,7 +132,7 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Use(middleware.TracingAndMetrics("gateway"))
 
 	// Prometheus metrics endpoint
-	fiberApp.Get("/metrics", adaptor.HTTPHandler(observability.MetricsHandler()))
+	fiberApp.Get("/metrics", adaptor.HTTPHandler(prometheus.MetricsHandler()))
 
 	// Routes
 	fiberApp.Post("/auth/signup", authHandler.SignUp)

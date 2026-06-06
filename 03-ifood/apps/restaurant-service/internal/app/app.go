@@ -16,6 +16,7 @@ import (
 
 	"logger"
 	"observability"
+	"prometheus"
 	"restaurant-service/internal/config"
 	"restaurant-service/internal/handler"
 	"restaurant-service/internal/repository"
@@ -70,6 +71,9 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("could not connect to database: %w", errPing)
 	}
 
+	// Register DB stats collector
+	registerDBMetrics(pool, "restaurant")
+
 	return &App{
 		cfg:          cfg,
 		db:           pool,
@@ -112,7 +116,7 @@ func (a *App) Run() error {
 	// 3. Start Prometheus metrics server on port 9092
 	go func() {
 		mux := http.NewServeMux()
-		mux.Handle("/metrics", observability.MetricsHandler())
+		mux.Handle("/metrics", prometheus.MetricsHandler())
 		slog.Info("Starting restaurant-service Prometheus metrics server", "addr", ":9092")
 		if err := http.ListenAndServe(":9092", mux); err != nil {
 			slog.Error("Failed to run metrics server", "error", err)

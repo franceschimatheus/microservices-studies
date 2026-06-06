@@ -22,6 +22,7 @@ import (
 	pb "order-service/pb"
 	"logger"
 	"observability"
+	"prometheus"
 )
 
 type App struct {
@@ -70,6 +71,9 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("could not connect to database: %w", errPing)
 	}
 
+	// Register DB stats collector
+	registerDBMetrics(pool, "order")
+
 	return &App{
 		cfg:          cfg,
 		db:           pool,
@@ -112,7 +116,7 @@ func (a *App) Run() error {
 	// 3. Start Prometheus metrics server on a separate port (9094)
 	go func() {
 		mux := http.NewServeMux()
-		mux.Handle("/metrics", observability.MetricsHandler())
+		mux.Handle("/metrics", prometheus.MetricsHandler())
 		slog.Info("Starting order-service Prometheus metrics server", "addr", ":9094")
 		if err := http.ListenAndServe(":9094", mux); err != nil {
 			slog.Error("Failed to run metrics server", "error", err)

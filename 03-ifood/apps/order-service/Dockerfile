@@ -5,8 +5,9 @@ WORKDIR /app
 # Copy go.work and modules
 COPY go.work ./
 COPY apps/order-service/ ./apps/order-service/
-COPY apps/logger/ ./apps/logger/
-COPY apps/observability/ ./apps/observability/
+COPY infra/logger/ ./infra/logger/
+COPY infra/observability/ ./infra/observability/
+COPY infra/prometheus/ ./infra/prometheus/
 
 # Build service
 WORKDIR /app/apps/order-service

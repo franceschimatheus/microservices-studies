@@ -4,8 +4,9 @@ use (
 	./apps/auth-service
 	./apps/cart-service
 	./apps/gateway
-	./apps/logger
-	./apps/observability
 	./apps/order-service
 	./apps/restaurant-service
+	./infra/logger
+	./infra/observability
+	./infra/prometheus
 )
