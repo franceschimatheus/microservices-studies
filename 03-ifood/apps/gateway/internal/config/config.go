@@ -5,8 +5,10 @@ import (
 )
 
 type Config struct {
-	BindAddr        string
-	AuthServiceAddr string
+	BindAddr              string
+	AuthServiceAddr       string
+	RestaurantServiceAddr string
+	OtelCollectorAddr     string
 }
 
 func Load() *Config {
@@ -20,8 +22,20 @@ func Load() *Config {
 		authServiceAddr = "127.0.0.1:50051"
 	}
 
+	restaurantServiceAddr := os.Getenv("RESTAURANT_SERVICE_ADDR")
+	if restaurantServiceAddr == "" {
+		restaurantServiceAddr = "127.0.0.1:50052"
+	}
+
+	otelCollectorAddr := os.Getenv("OTEL_COLLECTOR_ADDR")
+	if otelCollectorAddr == "" {
+		otelCollectorAddr = "127.0.0.1:4317"
+	}
+
 	return &Config{
-		BindAddr:        bindAddr,
-		AuthServiceAddr: authServiceAddr,
+		BindAddr:              bindAddr,
+		AuthServiceAddr:       authServiceAddr,
+		RestaurantServiceAddr: restaurantServiceAddr,
+		OtelCollectorAddr:     otelCollectorAddr,
 	}
 }

@@ -4,19 +4,17 @@ WORKDIR /app
 
 # Copy go.work and modules
 COPY go.work ./
-COPY apps/auth-service/ ./apps/auth-service/
 COPY apps/restaurant-service/ ./apps/restaurant-service/
-COPY apps/gateway/ ./apps/gateway/
 COPY apps/logger/ ./apps/logger/
 COPY apps/observability/ ./apps/observability/
 
 # Build service
-WORKDIR /app/apps/gateway
-RUN CGO_ENABLED=0 GOOS=linux GOWORK=off go build -o /gateway cmd/server/main.go
+WORKDIR /app/apps/restaurant-service
+RUN CGO_ENABLED=0 GOOS=linux GOWORK=off go build -o /restaurant-service cmd/server/main.go
 
 # Final stage
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /gateway /gateway
-EXPOSE 8080
-ENTRYPOINT ["/gateway"]
+COPY --from=builder /restaurant-service /restaurant-service
+EXPOSE 50052
+ENTRYPOINT ["/restaurant-service"]

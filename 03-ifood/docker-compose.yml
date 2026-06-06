@@ -44,8 +44,40 @@ services:
       - BIND_ADDR=0.0.0.0:50051
       - DB_DSN=postgres://auth_user:auth_password@postgres-auth:5432/auth_db?sslmode=disable
       - JWT_SECRET=test-secret-key-change-in-prod
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
     depends_on:
       - postgres-auth
+      - jaeger
+    restart: unless-stopped
+
+  postgres-restaurant:
+    image: postgres:16-alpine
+    container_name: postgres-restaurant-ifood
+    environment:
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_password
+      POSTGRES_DB: restaurant_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-restaurant-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  restaurant-service:
+    build:
+      context: .
+      dockerfile: apps/restaurant-service/Dockerfile
+    container_name: restaurant-service-ifood
+    ports:
+      - "127.0.0.1:50052:50052"
+    environment:
+      - PORT=50052
+      - BIND_ADDR=0.0.0.0:50052
+      - DB_DSN=postgres://restaurant_user:restaurant_password@postgres-restaurant:5432/restaurant_db?sslmode=disable
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
+    depends_on:
+      - postgres-restaurant
+      - jaeger
     restart: unless-stopped
 
   gateway:
@@ -59,8 +91,12 @@ services:
       - PORT=8080
       - BIND_ADDR=0.0.0.0:8080
       - AUTH_SERVICE_ADDR=auth-service:50051
+      - RESTAURANT_SERVICE_ADDR=restaurant-service:50052
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
     depends_on:
       - auth-service
+      - restaurant-service
+      - jaeger
     restart: unless-stopped
 
   web:
@@ -74,5 +110,59 @@ services:
       - gateway
     restart: unless-stopped
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: jaeger-ifood
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: prometheus-ifood
+    volumes:
+      - ./apps/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki-ifood
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail-ifood
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./apps/promtail/promtail.yml:/etc/promtail/promtail.yml
+    command: -config.file=/etc/promtail/promtail.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana-ifood
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./apps/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - loki
+      - jaeger
+    restart: unless-stopped
+
 volumes:
   postgres-auth-data:
+  postgres-restaurant-data:

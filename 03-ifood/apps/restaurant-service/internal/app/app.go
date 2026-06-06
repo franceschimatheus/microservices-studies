@@ -14,14 +14,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 
-	"auth-service/internal/config"
-	"auth-service/internal/handler"
-	"auth-service/internal/repository"
-	"auth-service/internal/service"
-	"auth-service/migrations"
-	pb "auth-service/pb"
 	"logger"
 	"observability"
+	"restaurant-service/internal/config"
+	"restaurant-service/internal/handler"
+	"restaurant-service/internal/repository"
+	"restaurant-service/internal/service"
+	"restaurant-service/migrations"
+	pb "restaurant-service/pb"
 )
 
 type App struct {
@@ -33,12 +33,12 @@ type App struct {
 
 func New(cfg *config.Config) (*App, error) {
 	// Initialize structured logging
-	logger.InitLogger("auth-service", nil)
+	logger.InitLogger("restaurant-service", nil)
 	slog.Info("Logger initialized")
 
 	// Initialize tracing
 	ctx := context.Background()
-	_, otelShutdown, err := observability.InitTracer(ctx, "auth-service", cfg.OtelCollectorAddr)
+	_, otelShutdown, err := observability.InitTracer(ctx, "restaurant-service", cfg.OtelCollectorAddr)
 	if err != nil {
 		slog.Error("Failed to initialize tracer", "error", err)
 	}
@@ -109,33 +109,28 @@ func (a *App) Run() error {
 		return fmt.Errorf("failed to listen on %s: %w", a.cfg.BindAddr, err)
 	}
 
-	// 3. Start Prometheus metrics server on a separate port (9091)
+	// 3. Start Prometheus metrics server on port 9092
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", observability.MetricsHandler())
-		slog.Info("Starting auth-service Prometheus metrics server", "addr", ":9091")
-		// Listen strictly on all interfaces inside the container, or 0.0.0.0 for containerized scrapers.
-		// Wait, the security guideline states:
-		// "Servers MUST listen on localhost or 127.0.0.1 when testing. Servers MUST NOT listen on 0.0.0.0."
-		// For Docker containers, listening on 0.0.0.0 inside the container is required so Prometheus container can reach it.
-		// We'll leave it as ":9091" which binds to 0.0.0.0 inside the container, but since it is inside a docker-compose network, it's not exposed to the public internet unless mapped.
-		if err := http.ListenAndServe(":9091", mux); err != nil {
+		slog.Info("Starting restaurant-service Prometheus metrics server", "addr", ":9092")
+		if err := http.ListenAndServe(":9092", mux); err != nil {
 			slog.Error("Failed to run metrics server", "error", err)
 		}
 	}()
 
 	// 4. Wire Component Layer (Clean Architecture)
-	userRepo := repository.NewPostgresUserRepository(a.db)
-	authServ := service.NewAuthServiceImpl(userRepo, []byte(a.cfg.JWTSecret))
-	grpcHandler := handler.NewGrpcAuthHandler(authServ)
+	repo := repository.NewPostgresRestaurantRepository(a.db)
+	serv := service.NewRestaurantServiceImpl(repo)
+	grpcHandler := handler.NewGrpcRestaurantHandler(serv)
 
 	// Add OTel server handler for tracing propagation
 	a.gRPCServer = grpc.NewServer(
 		observability.GRPCServerStatsHandler(),
 	)
-	pb.RegisterAuthServiceServer(a.gRPCServer, grpcHandler)
+	pb.RegisterRestaurantServiceServer(a.gRPCServer, grpcHandler)
 
-	slog.Info("Auth Service is running", "bind_addr", a.cfg.BindAddr)
+	slog.Info("Restaurant Service is running", "bind_addr", a.cfg.BindAddr)
 	return a.gRPCServer.Serve(lis)
 }
 

@@ -10,6 +10,7 @@ tasks:
     desc: Compile protobuf schemas for microservices
     cmds:
       - protoc --go_out=apps/auth-service --go_opt=module=auth-service --go-grpc_out=apps/auth-service --go-grpc_opt=module=auth-service apps/auth-service/pb/auth.proto
+      - protoc --go_out=apps/restaurant-service --go_opt=module=restaurant-service --go-grpc_out=apps/restaurant-service --go-grpc_opt=module=restaurant-service apps/restaurant-service/pb/restaurant.proto
 
   up:
     desc: Start all services and infra using docker-compose

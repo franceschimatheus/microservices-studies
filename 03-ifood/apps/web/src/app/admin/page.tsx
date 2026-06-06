@@ -15,9 +15,16 @@ export default function AdminDashboard() {
         router.push('/login');
       } else if (user.role === 'customer') {
         router.push('/customer');
+      } else if (user.role === 'admin' && typeof window !== 'undefined' && localStorage.getItem('admin_view_mode') === 'customer') {
+        router.push('/customer');
       }
     }
   }, [user, loading, router]);
+
+  const switchToCustomerView = () => {
+    localStorage.setItem('admin_view_mode', 'customer');
+    router.push('/customer');
+  };
 
   if (loading || !user || user.role !== 'admin') {
     return (
@@ -38,44 +45,77 @@ export default function AdminDashboard() {
       <Navbar email={user.email} role={user.role} onLogout={logout} />
 
       <main className="flex-1 p-10 max-w-7xl w-full mx-auto">
-        <div className="bg-gradient-to-r from-indigo-950/20 to-slate-950 border border-slate-800 rounded-3xl p-10 mb-8 shadow-xl">
-          <h1 className="text-4xl font-extrabold mb-3 tracking-tight">
-            Admin Management Console 🛡️
-          </h1>
-          <p className="text-slate-400 text-lg">
-            Manage system services, inspect restaurant configurations, monitor order topics, and track platform metrics.
-          </p>
+        <div className="bg-gradient-to-r from-indigo-950/20 to-slate-950 border border-slate-800 rounded-3xl p-10 mb-8 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h1 className="text-4xl font-extrabold mb-3 tracking-tight">
+              Admin Management Console 🛡️
+            </h1>
+            <p className="text-slate-400 text-lg">
+              Manage system services, inspect restaurant configurations, monitor order topics, and track platform metrics.
+            </p>
+          </div>
+          <button 
+            onClick={switchToCustomerView}
+            className="shrink-0 bg-red-600 border border-red-650 text-white text-sm font-bold py-3.5 px-6 rounded-2xl hover:bg-red-700 hover:border-red-700 transition-all cursor-pointer shadow-lg"
+          >
+            Buy Products (Customer View) 🛒
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Service Status</h3>
+            <h3 className="text-lg font-bold mb-2">Service Metrics (Grafana)</h3>
             <p className="text-slate-400 text-xs mb-6 leading-relaxed">
               Monitor active microservice nodes, trace latency distributions, and view memory allocation rates.
             </p>
-            <button className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all cursor-pointer">
-              Open Grafana
-            </button>
+            <a 
+              href="http://localhost:3001" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-indigo-600 border border-indigo-600 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-700 hover:border-indigo-700 transition-all text-center"
+            >
+              Open Grafana 📊
+            </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Database Migrations</h3>
+            <h3 className="text-lg font-bold mb-2">Distributed Tracing (Jaeger)</h3>
             <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Verify schema migration histories, manage outbox tables, and review Postgres connection pools.
+              Trace transaction flows and request propagation paths across microservice boundaries.
             </p>
-            <button className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all cursor-pointer">
-              Run Migrator
-            </button>
+            <a 
+              href="http://localhost:16686" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+            >
+              Open Jaeger 🕸️
+            </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">User Directory</h3>
+            <h3 className="text-lg font-bold mb-2">Raw Metrics (Prometheus)</h3>
             <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Manage platform credentials, reset tokens, assign role credentials, and trace user session states.
+              Query Prometheus time-series metrics directly or inspect raw service endpoints.
             </p>
-            <button className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all cursor-pointer">
-              View Directory
-            </button>
+            <div className="flex gap-2.5">
+              <a 
+                href="http://localhost:9090" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+              >
+                Prometheus
+              </a>
+              <a 
+                href="http://localhost:8085/metrics" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+              >
+                Gateway Metrics
+              </a>
+            </div>
           </div>
         </div>
       </main>

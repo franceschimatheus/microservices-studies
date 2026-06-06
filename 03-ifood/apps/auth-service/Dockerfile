@@ -5,6 +5,8 @@ WORKDIR /app
 # Copy go.work and modules
 COPY go.work ./
 COPY apps/auth-service/ ./apps/auth-service/
+COPY apps/logger/ ./apps/logger/
+COPY apps/observability/ ./apps/observability/
 
 # Build service
 WORKDIR /app/apps/auth-service
