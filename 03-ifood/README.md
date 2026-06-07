@@ -660,7 +660,7 @@ loki
 
 - [x] RabbitMQ exchanges
 - [x] payment consumers
-- [ ] notification consumers
+- [x] notification consumers
 - [ ] delivery workers
 
 ---

@@ -11,6 +11,7 @@ type Config struct {
 	CartServiceAddr       string
 	OrderServiceAddr      string
 	OtelCollectorAddr     string
+	RedisAddr             string
 }
 
 func Load() *Config {
@@ -44,6 +45,11 @@ func Load() *Config {
 		otelCollectorAddr = "127.0.0.1:4317"
 	}
 
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "127.0.0.1:6379"
+	}
+
 	return &Config{
 		BindAddr:              bindAddr,
 		AuthServiceAddr:       authServiceAddr,
@@ -51,5 +57,6 @@ func Load() *Config {
 		CartServiceAddr:       cartServiceAddr,
 		OrderServiceAddr:      orderServiceAddr,
 		OtelCollectorAddr:     otelCollectorAddr,
+		RedisAddr:             redisAddr,
 	}
 }

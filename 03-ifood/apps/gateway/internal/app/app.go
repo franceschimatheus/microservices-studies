@@ -23,6 +23,8 @@ import (
 	cartpb "cart-service/pb"
 	orderpb "order-service/pb"
 	respb "restaurant-service/pb"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -32,6 +34,7 @@ type App struct {
 	restaurantConn *grpc.ClientConn
 	cartConn       *grpc.ClientConn
 	orderConn      *grpc.ClientConn
+	redisClient    *redis.Client
 	otelShutdown   func(context.Context) error
 }
 
@@ -45,6 +48,16 @@ func New(cfg *config.Config) (*App, error) {
 	_, otelShutdown, err := observability.InitTracer(ctx, "gateway", cfg.OtelCollectorAddr)
 	if err != nil {
 		slog.Error("Failed to initialize tracer", "error", err)
+	}
+
+	// Connect to Redis
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisAddr,
+	})
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		slog.Error("Failed to connect to Redis", "error", err)
+	} else {
+		slog.Info("Successfully connected to Redis")
 	}
 
 	// Connect to Auth Service via gRPC with OTel client instrumentation
@@ -99,7 +112,7 @@ func New(cfg *config.Config) (*App, error) {
 	}
 
 	orderClient := orderpb.NewOrderServiceClient(orderConn)
-	orderHandler := handler.NewOrderHandler(orderClient, cartClient, authClient)
+	orderHandler := handler.NewOrderHandler(orderClient, cartClient, authClient, redisClient)
 
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -153,6 +166,7 @@ func New(cfg *config.Config) (*App, error) {
 
 	fiberApp.Post("/orders", orderHandler.CreateOrder)
 	fiberApp.Get("/orders", orderHandler.ListOrders)
+	fiberApp.Get("/orders/stream", orderHandler.StreamUpdates)
 	fiberApp.Get("/orders/:id", orderHandler.GetOrder)
 	fiberApp.Put("/orders/:id/status", orderHandler.UpdateOrderStatus)
 
@@ -163,6 +177,7 @@ func New(cfg *config.Config) (*App, error) {
 		restaurantConn: restaurantConn,
 		cartConn:       cartConn,
 		orderConn:      orderConn,
+		redisClient:    redisClient,
 		otelShutdown:   otelShutdown,
 	}, nil
 }
@@ -196,6 +211,11 @@ func (a *App) Close() {
 	if a.orderConn != nil {
 		if err := a.orderConn.Close(); err != nil {
 			slog.Error("Error closing Order Service gRPC connection", "error", err)
+		}
+	}
+	if a.redisClient != nil {
+		if err := a.redisClient.Close(); err != nil {
+			slog.Error("Error closing Redis connection", "error", err)
 		}
 	}
 	if a.otelShutdown != nil {

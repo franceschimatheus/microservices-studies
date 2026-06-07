@@ -1,9 +1,15 @@
 package handler
 
 import (
+	"bufio"
 	"context"
+	"fmt"
+	"log/slog"
+
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/metadata"
 
 	authpb "auth-service/pb"
@@ -12,16 +18,18 @@ import (
 )
 
 type OrderHandler struct {
-	client     pb.OrderServiceClient
-	cartClient cartpb.CartServiceClient
-	authClient authpb.AuthServiceClient
+	client      pb.OrderServiceClient
+	cartClient  cartpb.CartServiceClient
+	authClient  authpb.AuthServiceClient
+	redisClient *redis.Client
 }
 
-func NewOrderHandler(client pb.OrderServiceClient, cartClient cartpb.CartServiceClient, authClient authpb.AuthServiceClient) *OrderHandler {
+func NewOrderHandler(client pb.OrderServiceClient, cartClient cartpb.CartServiceClient, authClient authpb.AuthServiceClient, redisClient *redis.Client) *OrderHandler {
 	return &OrderHandler{
-		client:     client,
-		cartClient: cartClient,
-		authClient: authClient,
+		client:      client,
+		cartClient:  cartClient,
+		authClient:  authClient,
+		redisClient: redisClient,
 	}
 }
 
@@ -203,4 +211,63 @@ func (h *OrderHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(updatedOrder)
+}
+
+func (h *OrderHandler) StreamUpdates(c *fiber.Ctx) error {
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return err
+	}
+
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Connection", "keep-alive")
+	c.Set("X-Accel-Buffering", "no")
+
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		slog.Info("SSE connection opened", "user_id", userID)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		channel := "notifications:user:" + userID
+		pubsub := h.redisClient.Subscribe(ctx, channel)
+		defer pubsub.Close()
+
+		// Send initial keep-alive comment
+		_, _ = fmt.Fprintf(w, ": ok\n\n")
+		_ = w.Flush()
+
+		ch := pubsub.Channel()
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case msg, ok := <-ch:
+				if !ok {
+					return
+				}
+				_, err := fmt.Fprintf(w, "data: %s\n\n", msg.Payload)
+				if err != nil {
+					slog.Info("SSE connection write error (client closed)", "user_id", userID, "error", err)
+					return
+				}
+				if err = w.Flush(); err != nil {
+					return
+				}
+			case <-ticker.C:
+				_, err := fmt.Fprintf(w, ": keep-alive\n\n")
+				if err != nil {
+					slog.Info("SSE connection keep-alive write error", "user_id", userID, "error", err)
+					return
+				}
+				if err = w.Flush(); err != nil {
+					return
+				}
+			}
+		}
+	})
+
+	return nil
 }

@@ -170,6 +170,25 @@ services:
       - rabbitmq
     restart: unless-stopped
 
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: notification-service-ifood
+    ports:
+      - "127.0.0.1:9096:9096"
+    environment:
+      - PORT=9096
+      - BIND_ADDR=0.0.0.0:9096
+      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - jaeger
+      - rabbitmq
+      - redis
+    restart: unless-stopped
+
   gateway:
     build:
       context: .
@@ -185,12 +204,14 @@ services:
       - CART_SERVICE_ADDR=cart-service:50053
       - ORDER_SERVICE_ADDR=order-service:50054
       - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - REDIS_ADDR=redis:6379
     depends_on:
       - auth-service
       - restaurant-service
       - cart-service
       - order-service
       - jaeger
+      - redis
     restart: unless-stopped
 
   web:

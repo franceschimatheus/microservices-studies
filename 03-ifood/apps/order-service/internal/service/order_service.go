@@ -72,6 +72,7 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, userID, restaurantID
 	// Publish order.created event to RabbitMQ
 	eventPayload := map[string]any{
 		"order_id": order.ID,
+		"user_id":  order.UserID,
 		"total":    order.TotalPrice,
 	}
 	payloadBytes, err := json.Marshal(eventPayload)
@@ -123,11 +124,37 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 		return nil, fmt.Errorf("invalid status: %s", status)
 	}
 
+	order, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get order before status update", "order_id", id, "error", err)
+		return nil, err
+	}
+
 	if err := s.repo.UpdateStatus(ctx, id, status); err != nil {
 		slog.ErrorContext(ctx, "failed to update order status", "order_id", id, "status", status, "error", err)
 		return nil, err
 	}
 
 	slog.InfoContext(ctx, "order status updated", "order_id", id, "status", status)
-	return s.repo.GetByID(ctx, id)
+
+	// Publish order.updated event
+	eventPayload := map[string]any{
+		"order_id": id,
+		"user_id":  order.UserID,
+		"status":   status,
+	}
+	payloadBytes, err := json.Marshal(eventPayload)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to marshal order.updated event", "error", err)
+	} else {
+		err = s.rabbitClient.Publish(ctx, "orders.exchange", "order.updated", payloadBytes)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to publish order.updated event", "error", err)
+		} else {
+			slog.InfoContext(ctx, "order.updated event published", "order_id", id, "status", status)
+		}
+	}
+
+	order.Status = status
+	return order, nil
 }

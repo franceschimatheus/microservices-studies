@@ -4,6 +4,7 @@ use (
 	./apps/auth-service
 	./apps/cart-service
 	./apps/gateway
+	./apps/notification-service
 	./apps/order-service
 	./apps/payment-service
 	./apps/restaurant-service

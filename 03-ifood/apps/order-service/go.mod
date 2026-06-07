@@ -6,6 +6,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.5.5
+	go.opentelemetry.io/otel v1.43.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 	logger v0.0.0-00010101000000-000000000000
@@ -36,7 +37,6 @@ require (
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.59.0 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.34.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.34.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
