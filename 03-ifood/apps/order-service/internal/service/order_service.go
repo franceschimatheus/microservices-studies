@@ -112,13 +112,14 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 		return nil, errors.New("status is required")
 	}
 
-	// Simple status validation
 	validStatuses := map[string]bool{
-		"PENDING":   true,
-		"CONFIRMED": true,
-		"PREPARING": true,
-		"DELIVERED": true,
-		"CANCELLED": true,
+		"PENDING":     true,
+		"CONFIRMED":   true,
+		"PREPARING":   true,
+		"READY":       true,
+		"ON_DELIVERY": true,
+		"DELIVERED":   true,
+		"CANCELLED":   true,
 	}
 	if !validStatuses[status] {
 		return nil, fmt.Errorf("invalid status: %s", status)

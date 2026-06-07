@@ -53,10 +53,10 @@ services:
       - BIND_ADDR=0.0.0.0:50051
       - DB_DSN=postgres://auth_user:auth_password@postgres-auth:5432/auth_db?sslmode=disable
       - JWT_SECRET=test-secret-key-change-in-prod
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
     depends_on:
       - postgres-auth
-      - jaeger
+      - otel-collector
     restart: unless-stopped
 
   postgres-restaurant:
@@ -83,10 +83,10 @@ services:
       - PORT=50052
       - BIND_ADDR=0.0.0.0:50052
       - DB_DSN=postgres://restaurant_user:restaurant_password@postgres-restaurant:5432/restaurant_db?sslmode=disable
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
     depends_on:
       - postgres-restaurant
-      - jaeger
+      - otel-collector
     restart: unless-stopped
 
   cart-service:
@@ -100,10 +100,10 @@ services:
       - PORT=50053
       - BIND_ADDR=0.0.0.0:50053
       - REDIS_ADDR=redis:6379
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
     depends_on:
       - redis
-      - jaeger
+      - otel-collector
     restart: unless-stopped
 
   postgres-order:
@@ -143,11 +143,11 @@ services:
       - PORT=50054
       - BIND_ADDR=0.0.0.0:50054
       - DB_DSN=postgres://order_user:order_password@postgres-order:5432/order_db?sslmode=disable
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - postgres-order
-      - jaeger
+      - otel-collector
       - rabbitmq
     restart: unless-stopped
 
@@ -162,11 +162,11 @@ services:
       - PORT=50055
       - BIND_ADDR=0.0.0.0:50055
       - DB_DSN=postgres://payment_user:payment_password@postgres-payment:5432/payment_db?sslmode=disable
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - postgres-payment
-      - jaeger
+      - otel-collector
       - rabbitmq
     restart: unless-stopped
 
@@ -180,13 +180,31 @@ services:
     environment:
       - PORT=9096
       - BIND_ADDR=0.0.0.0:9096
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - REDIS_ADDR=redis:6379
     depends_on:
-      - jaeger
+      - otel-collector
       - rabbitmq
       - redis
+    restart: unless-stopped
+
+  delivery-service:
+    build:
+      context: .
+      dockerfile: apps/delivery-service/Dockerfile
+    container_name: delivery-service-ifood
+    ports:
+      - "127.0.0.1:9097:9097"
+    environment:
+      - PORT=9097
+      - BIND_ADDR=0.0.0.0:9097
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - otel-collector
+      - rabbitmq
+      - order-service
     restart: unless-stopped
 
   gateway:
@@ -203,14 +221,14 @@ services:
       - RESTAURANT_SERVICE_ADDR=restaurant-service:50052
       - CART_SERVICE_ADDR=cart-service:50053
       - ORDER_SERVICE_ADDR=order-service:50054
-      - OTEL_COLLECTOR_ADDR=jaeger:4317
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - REDIS_ADDR=redis:6379
     depends_on:
       - auth-service
       - restaurant-service
       - cart-service
       - order-service
-      - jaeger
+      - otel-collector
       - redis
     restart: unless-stopped
 
@@ -243,8 +261,26 @@ services:
     container_name: jaeger-ifood
     ports:
       - "16686:16686"
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+      - PROMETHEUS_QUERY_SUPPORT_SPANMETRICS_CONNECTOR=true
+    volumes:
+      - ./infra/jaeger/ui-config.json:/etc/jaeger/ui-config.json
+    command: ["--query.ui-config", "/etc/jaeger/ui-config.json"]
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    container_name: otel-collector-ifood
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./infra/otel-collector/otel-collector.yaml:/etc/otel-collector.yaml
+    ports:
       - "4317:4317"
-      - "4318:4318"
+      - "8889:8889"
+    depends_on:
+      - jaeger
     restart: unless-stopped
 
   prometheus:
@@ -252,6 +288,7 @@ services:
     container_name: prometheus-ifood
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/prometheus/rules.yml:/etc/prometheus/rules.yml
     ports:
       - "9090:9090"
     restart: unless-stopped

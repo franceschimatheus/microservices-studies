@@ -4,6 +4,8 @@ export const OrderStatusSchema = z.enum([
   'PENDING',
   'CONFIRMED',
   'PREPARING',
+  'READY',
+  'ON_DELIVERY',
   'DELIVERED',
   'CANCELLED',
 ]);

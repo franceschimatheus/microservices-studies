@@ -13,11 +13,13 @@ interface OrdersDrawerProps {
 }
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
-  PENDING:   { label: 'Pending',   color: 'text-amber-400',   bg: 'bg-amber-950/40 border-amber-800/40',   Icon: Clock },
-  CONFIRMED: { label: 'Confirmed', color: 'text-blue-400',    bg: 'bg-blue-950/40 border-blue-800/40',     Icon: CheckCircle2 },
-  PREPARING: { label: 'Preparing', color: 'text-orange-400',  bg: 'bg-orange-950/40 border-orange-800/40', Icon: ChefHat },
-  DELIVERED: { label: 'Delivered', color: 'text-green-400',   bg: 'bg-green-950/40 border-green-800/40',   Icon: Truck },
-  CANCELLED: { label: 'Cancelled', color: 'text-red-400',     bg: 'bg-red-950/40 border-red-800/40',       Icon: XCircle },
+  PENDING:     { label: 'Pending',     color: 'text-amber-400',   bg: 'bg-amber-950/40 border-amber-800/40',   Icon: Clock },
+  CONFIRMED:   { label: 'Confirmed',   color: 'text-blue-400',    bg: 'bg-blue-950/40 border-blue-800/40',     Icon: CheckCircle2 },
+  PREPARING:   { label: 'Preparing',   color: 'text-orange-400',  bg: 'bg-orange-950/40 border-orange-800/40', Icon: ChefHat },
+  READY:       { label: 'Ready',       color: 'text-indigo-400',  bg: 'bg-indigo-950/40 border-indigo-800/40', Icon: Package },
+  ON_DELIVERY: { label: 'On Delivery', color: 'text-purple-400',  bg: 'bg-purple-950/40 border-purple-800/40', Icon: Truck },
+  DELIVERED:   { label: 'Delivered',   color: 'text-green-400',   bg: 'bg-green-950/40 border-green-800/40',   Icon: CheckCircle2 },
+  CANCELLED:   { label: 'Cancelled',   color: 'text-red-400',     bg: 'bg-red-950/40 border-red-800/40',       Icon: XCircle },
 };
 
 function StatusBadge({ status }: { status: OrderStatus }) {

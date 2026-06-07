@@ -37,6 +37,16 @@
       "type": "dashboard_by_uid",
       "value": "payment-service-perf",
       "order": 7
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "delivery-service-perf",
+      "order": 8
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "notification-service-perf",
+      "order": 9
     }
   ]
 }

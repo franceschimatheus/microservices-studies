@@ -3,6 +3,7 @@ go 1.26.3
 use (
 	./apps/auth-service
 	./apps/cart-service
+	./apps/delivery-service
 	./apps/gateway
 	./apps/notification-service
 	./apps/order-service

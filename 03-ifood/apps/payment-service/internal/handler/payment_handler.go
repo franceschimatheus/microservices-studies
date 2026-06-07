@@ -16,17 +16,20 @@ import (
 
 type OrderCreatedEvent struct {
 	OrderID string  `json:"order_id"`
+	UserID  string  `json:"user_id"`
 	Total   float64 `json:"total"`
 }
 
 type PaymentCompletedEvent struct {
 	OrderID   string `json:"order_id"`
 	PaymentID string `json:"payment_id"`
+	UserID    string `json:"user_id"`
 }
 
 type PaymentFailedEvent struct {
 	OrderID string `json:"order_id"`
 	Reason  string `json:"reason"`
+	UserID  string `json:"user_id"`
 }
 
 type PaymentHandler struct {
@@ -67,9 +70,9 @@ func (h *PaymentHandler) HandleOrderCreated(ctx context.Context, body []byte) er
 		slog.InfoContext(ctx, "Payment already processed (idempotent action)", "order_id", event.OrderID, "status", existing.Status)
 		// Publish result again to ensure subsequent services receive it (in case of dropped messages)
 		if existing.Status == "COMPLETED" {
-			return h.publishCompleted(ctx, event.OrderID, existing.ID)
+			return h.publishCompleted(ctx, event.OrderID, existing.ID, event.UserID)
 		} else {
-			return h.publishFailed(ctx, event.OrderID, "Payment failed during previous attempt")
+			return h.publishFailed(ctx, event.OrderID, "Payment failed during previous attempt", event.UserID)
 		}
 	}
 
@@ -93,25 +96,26 @@ func (h *PaymentHandler) HandleOrderCreated(ctx context.Context, body []byte) er
 	if err != nil {
 		slog.ErrorContext(ctx, "Error processing payment gateway transaction", "error", err)
 		_ = h.repo.UpdateStatus(ctx, paymentID, "FAILED")
-		_ = h.publishFailed(ctx, event.OrderID, "Internal gateway error")
+		_ = h.publishFailed(ctx, event.OrderID, "Internal gateway error", event.UserID)
 		return err
 	}
 
 	if !success {
 		slog.WarnContext(ctx, "Payment transaction was rejected/failed", "order_id", event.OrderID)
 		_ = h.repo.UpdateStatus(ctx, paymentID, "FAILED")
-		return h.publishFailed(ctx, event.OrderID, "Transaction rejected by processor")
+		return h.publishFailed(ctx, event.OrderID, "Transaction rejected by processor", event.UserID)
 	}
 
 	slog.InfoContext(ctx, "Payment transaction succeeded", "order_id", event.OrderID, "payment_id", paymentID)
 	_ = h.repo.UpdateStatus(ctx, paymentID, "COMPLETED")
-	return h.publishCompleted(ctx, event.OrderID, paymentID)
+	return h.publishCompleted(ctx, event.OrderID, paymentID, event.UserID)
 }
 
-func (h *PaymentHandler) publishCompleted(ctx context.Context, orderID, paymentID string) error {
+func (h *PaymentHandler) publishCompleted(ctx context.Context, orderID, paymentID, userID string) error {
 	payload, err := json.Marshal(PaymentCompletedEvent{
 		OrderID:   orderID,
 		PaymentID: paymentID,
+		UserID:    userID,
 	})
 	if err != nil {
 		return err
@@ -119,10 +123,11 @@ func (h *PaymentHandler) publishCompleted(ctx context.Context, orderID, paymentI
 	return h.rabbitClient.Publish(ctx, "payments.exchange", "payment.completed", payload)
 }
 
-func (h *PaymentHandler) publishFailed(ctx context.Context, orderID, reason string) error {
+func (h *PaymentHandler) publishFailed(ctx context.Context, orderID, reason, userID string) error {
 	payload, err := json.Marshal(PaymentFailedEvent{
 		OrderID: orderID,
 		Reason:  reason,
+		UserID:  userID,
 	})
 	if err != nil {
 		return err

@@ -137,6 +137,7 @@ func (a *App) Run() error {
 	orderServ := service.NewOrderService(orderRepo, a.rabbitClient)
 	grpcHandler := handler.NewGrpcOrderHandler(orderServ)
 	paymentConsumer := handler.NewPaymentConsumer(orderServ)
+	deliveryConsumer := handler.NewDeliveryConsumer(orderServ)
 
 	ctx := context.Background()
 	// Subscribe to payment.completed
@@ -149,6 +150,24 @@ func (a *App) Run() error {
 	err = a.rabbitClient.Subscribe(ctx, "order.payment-failed.queue", "payments.exchange", "payment.failed", paymentConsumer.HandlePaymentFailed)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to payment.failed: %w", err)
+	}
+
+	// Subscribe to delivery.updated
+	err = a.rabbitClient.Subscribe(ctx, "order.delivery-updated.queue", "delivery.exchange", "delivery.updated", deliveryConsumer.HandleDeliveryUpdated)
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to delivery.updated: %w", err)
+	}
+
+	// Subscribe to delivery.assigned
+	err = a.rabbitClient.Subscribe(ctx, "order.delivery-assigned.queue", "delivery.exchange", "delivery.assigned", deliveryConsumer.HandleDeliveryAssigned)
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to delivery.assigned: %w", err)
+	}
+
+	// Subscribe to delivery.completed
+	err = a.rabbitClient.Subscribe(ctx, "order.delivery-completed.queue", "delivery.exchange", "delivery.completed", deliveryConsumer.HandleDeliveryCompleted)
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to delivery.completed: %w", err)
 	}
 
 	// Add OTel server handler for tracing propagation

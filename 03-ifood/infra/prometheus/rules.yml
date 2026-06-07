@@ -1,0 +1,69 @@
+groups:
+  - name: jaeger_spm_rules
+    rules:
+      # Legacy metric names mapping (latency_*)
+      - record: latency_bucket
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_bucket, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+      - record: latency_sum
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_sum, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+      - record: latency_count
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_count, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+      - record: calls_total
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(calls_total, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+
+      # Modern OTel Connector metric names mapping (duration_*)
+      - record: duration_bucket
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_bucket, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+      - record: duration_sum
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_sum, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )
+      - record: duration_count
+        expr: |
+          label_replace(
+            label_replace(
+              label_replace(duration_milliseconds_count, "span_kind", "SERVER", "span_kind", "SPAN_KIND_SERVER"),
+              "span_kind", "CLIENT", "span_kind", "SPAN_KIND_CLIENT"
+            ),
+            "operation", "$1", "span_name", "(.*)"
+          )

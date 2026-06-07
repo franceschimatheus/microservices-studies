@@ -661,7 +661,7 @@ loki
 - [x] RabbitMQ exchanges
 - [x] payment consumers
 - [x] notification consumers
-- [ ] delivery workers
+- [x] delivery workers
 
 ---
 
