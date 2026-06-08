@@ -667,10 +667,10 @@ loki
 
 ## Phase 4 — Reliability
 
-- retries
-- DLQs
-- idempotency
-- outbox pattern
+- [x] retries
+- [x] DLQs
+- [x] idempotency
+- [x] outbox pattern
 
 ---
 

@@ -214,6 +214,20 @@ func (c *Client) Subscribe(ctx context.Context, queueName, exchange, routingKey 
 		return fmt.Errorf("failed to declare queue %s: %w", queueName, err)
 	}
 
+	// Declare DLQ Queue
+	dlqName := queueName + ".dlq"
+	_, err = ch.QueueDeclare(
+		dlqName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return fmt.Errorf("failed to declare DLQ queue %s: %w", dlqName, err)
+	}
+
 	// Bind Queue to Exchange
 	err = ch.QueueBind(
 		queueName,
@@ -240,6 +254,7 @@ func (c *Client) Subscribe(ctx context.Context, queueName, exchange, routingKey 
 	}
 
 	go func() {
+		maxRetries := 3
 		for d := range msgs {
 			// Extract OTel tracing context from message headers
 			carrier := AMQPHeaderCarrier(d.Headers)
@@ -250,13 +265,71 @@ func (c *Client) Subscribe(ctx context.Context, queueName, exchange, routingKey 
 				msgCtx = context.WithValue(msgCtx, MessageIDKey, d.MessageId)
 			}
 
-			err := handler(msgCtx, d.Body)
-			if err != nil {
-				slog.Error("Failed to handle consumed message", "queue", queueName, "error", err)
-				// Requeue on failure (reconsider in production for dead-letter queuing)
-				_ = d.Nack(false, true)
-			} else {
+			var err error
+			success := false
+			backoff := 500 * time.Millisecond
+
+			for attempt := 1; attempt <= maxRetries; attempt++ {
+				err = handler(msgCtx, d.Body)
+				if err == nil {
+					success = true
+					break
+				}
+
+				slog.Warn("Failed to handle message, retrying...", 
+					"queue", queueName, 
+					"attempt", attempt, 
+					"max_retries", maxRetries, 
+					"backoff", backoff, 
+					"error", err)
+
+				if attempt < maxRetries {
+					time.Sleep(backoff)
+					backoff *= 2
+				}
+			}
+
+			if success {
 				_ = d.Ack(false)
+			} else {
+				slog.Error("Failed to handle message after maximum retries. Routing to DLQ.", 
+					"queue", queueName, 
+					"dlq", dlqName, 
+					"error", err)
+
+				// Publish to DLQ
+				dlqHeaders := amqp.Table{
+					"x-original-exchange":   d.Exchange,
+					"x-original-routing-key": d.RoutingKey,
+					"x-exception-message":    err.Error(),
+					"x-failed-at":           time.Now().Format(time.RFC3339),
+				}
+
+				// Copy original headers if they exist
+				for k, v := range d.Headers {
+					dlqHeaders[k] = v
+				}
+
+				errPub := ch.PublishWithContext(
+					msgCtx,
+					"", // default exchange
+					dlqName, // routing key matches DLQ queue name exactly
+					false,
+					false,
+					amqp.Publishing{
+						MessageId:   d.MessageId,
+						ContentType: d.ContentType,
+						Body:        d.Body,
+						Headers:     dlqHeaders,
+					},
+				)
+				if errPub != nil {
+					slog.Error("Failed to publish message to DLQ. Requeuing in original queue.", "queue", queueName, "error", errPub)
+					_ = d.Nack(false, true)
+				} else {
+					slog.Info("Successfully routed message to DLQ and acknowledged original message", "queue", queueName, "dlq", dlqName)
+					_ = d.Ack(false)
+				}
 			}
 		}
 	}()
