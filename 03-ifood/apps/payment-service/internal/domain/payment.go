@@ -7,6 +7,7 @@ import (
 )
 
 var ErrPaymentNotFound = errors.New("payment not found")
+var ErrDuplicateEvent = errors.New("duplicate event ignored")
 
 type Payment struct {
 	ID        string    `json:"id"`

@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel"
 
 	"notification-service/internal/service"
+	"rabbitmq"
 )
 
 type OrderCreatedEvent struct {
@@ -42,13 +45,35 @@ type DeliveryCompletedEvent struct {
 }
 
 type NotificationHandler struct {
-	service service.NotificationService
+	service     service.NotificationService
+	redisClient *redis.Client
 }
 
-func NewNotificationHandler(service service.NotificationService) *NotificationHandler {
+func NewNotificationHandler(service service.NotificationService, redisClient *redis.Client) *NotificationHandler {
 	return &NotificationHandler{
-		service: service,
+		service:     service,
+		redisClient: redisClient,
 	}
+}
+
+func (h *NotificationHandler) isDuplicate(ctx context.Context, handlerName, eventID string) (bool, error) {
+	messageID, ok := ctx.Value(rabbitmq.MessageIDKey).(string)
+	if !ok || messageID == "" {
+		return false, nil
+	}
+
+	key := fmt.Sprintf("idempotency:notification:%s:%s", handlerName, messageID)
+	okSet, err := h.redisClient.SetNX(ctx, key, "processed", 24*time.Hour).Result()
+	if err != nil {
+		return false, fmt.Errorf("redis error in idempotency check: %w", err)
+	}
+
+	if !okSet {
+		slog.WarnContext(ctx, "Duplicate notification event detected and ignored", "message_id", messageID, "handler", handlerName, "event_id", eventID)
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (h *NotificationHandler) HandleOrderCreated(ctx context.Context, body []byte) error {
@@ -63,6 +88,14 @@ func (h *NotificationHandler) HandleOrderCreated(ctx context.Context, body []byt
 	}
 
 	slog.InfoContext(ctx, "Handling order.created event for notification", "order_id", event.OrderID, "user_id", event.UserID)
+
+	duplicate, err := h.isDuplicate(ctx, "HandleOrderCreated", event.OrderID)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return nil
+	}
 
 	subject := fmt.Sprintf("Order #%s Placed Successfully!", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Hi! Your order #%s of total value $%.2f has been received and is awaiting payment confirmation.", event.OrderID, event.Total)
@@ -99,6 +132,14 @@ func (h *NotificationHandler) HandlePaymentCompleted(ctx context.Context, body [
 
 	slog.InfoContext(ctx, "Handling payment.completed event for notification", "order_id", event.OrderID)
 
+	duplicate, err := h.isDuplicate(ctx, "HandlePaymentCompleted", event.OrderID)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return nil
+	}
+
 	// We can simulate email using the order ID since that's what we have
 	subject := fmt.Sprintf("Payment Completed for Order #%s", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Success! Payment for your order #%s has been processed successfully. Transaction ID: %s.", event.OrderID, event.PaymentID)
@@ -120,6 +161,14 @@ func (h *NotificationHandler) HandlePaymentFailed(ctx context.Context, body []by
 
 	slog.InfoContext(ctx, "Handling payment.failed event for notification", "order_id", event.OrderID)
 
+	duplicate, err := h.isDuplicate(ctx, "HandlePaymentFailed", event.OrderID)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return nil
+	}
+
 	subject := fmt.Sprintf("Payment Failed for Order #%s", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Attention: Payment for your order #%s has failed. Reason: %s. Please try again.", event.OrderID, event.Reason)
 
@@ -138,6 +187,14 @@ func (h *NotificationHandler) HandleOrderUpdated(ctx context.Context, body []byt
 	}
 
 	slog.InfoContext(ctx, "Handling order.updated event for notification", "order_id", event.OrderID, "user_id", event.UserID, "status", event.Status)
+
+	duplicate, err := h.isDuplicate(ctx, "HandleOrderUpdated", event.OrderID)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return nil
+	}
 
 	subject := fmt.Sprintf("Order #%s Status Update", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Your order #%s status has been updated to: %s.", event.OrderID, event.Status)
@@ -163,6 +220,14 @@ func (h *NotificationHandler) HandleDeliveryCompleted(ctx context.Context, body 
 	}
 
 	slog.InfoContext(ctx, "Handling delivery.completed event for notification", "order_id", event.OrderID)
+
+	duplicate, err := h.isDuplicate(ctx, "HandleDeliveryCompleted", event.OrderID)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return nil
+	}
 
 	subject := fmt.Sprintf("Order #%s Delivered!", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Hooray! Your order #%s has been successfully delivered. Enjoy your meal!", event.OrderID)

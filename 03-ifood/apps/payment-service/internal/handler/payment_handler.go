@@ -87,6 +87,10 @@ func (h *PaymentHandler) HandleOrderCreated(ctx context.Context, body []byte) er
 		UpdatedAt: time.Now(),
 	}
 	if err := h.repo.Create(ctx, p); err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate order.created event detected and ignored", "order_id", event.OrderID)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to save initial payment record", "error", err)
 		return err
 	}

@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"errors"
 	"go.opentelemetry.io/otel"
 
+	"order-service/internal/domain"
 	"order-service/internal/service"
 )
 
@@ -43,6 +45,10 @@ func (h *DeliveryConsumer) HandleDeliveryUpdated(ctx context.Context, body []byt
 
 	_, err := h.orderService.UpdateOrderStatus(ctx, event.OrderID, event.Status)
 	if err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate delivery.updated event detected and ignored", "order_id", event.OrderID, "status", event.Status)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to update order status from delivery update", "order_id", event.OrderID, "status", event.Status, "error", err)
 		return err
 	}
@@ -65,6 +71,10 @@ func (h *DeliveryConsumer) HandleDeliveryAssigned(ctx context.Context, body []by
 
 	_, err := h.orderService.UpdateOrderStatus(ctx, event.OrderID, "ON_DELIVERY")
 	if err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate delivery.assigned event detected and ignored", "order_id", event.OrderID)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to update order status to ON_DELIVERY", "order_id", event.OrderID, "error", err)
 		return err
 	}
@@ -87,6 +97,10 @@ func (h *DeliveryConsumer) HandleDeliveryCompleted(ctx context.Context, body []b
 
 	_, err := h.orderService.UpdateOrderStatus(ctx, event.OrderID, "DELIVERED")
 	if err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate delivery.completed event detected and ignored", "order_id", event.OrderID)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to update order status to DELIVERED", "order_id", event.OrderID, "error", err)
 		return err
 	}

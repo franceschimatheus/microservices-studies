@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"errors"
 	"go.opentelemetry.io/otel"
 
+	"order-service/internal/domain"
 	"order-service/internal/service"
 )
 
@@ -43,6 +45,10 @@ func (h *PaymentConsumer) HandlePaymentCompleted(ctx context.Context, body []byt
 
 	_, err := h.orderService.UpdateOrderStatus(ctx, event.OrderID, "CONFIRMED")
 	if err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate payment.completed event detected and ignored", "order_id", event.OrderID)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to update order status to CONFIRMED", "order_id", event.OrderID, "error", err)
 		return err
 	}
@@ -65,6 +71,10 @@ func (h *PaymentConsumer) HandlePaymentFailed(ctx context.Context, body []byte) 
 
 	_, err := h.orderService.UpdateOrderStatus(ctx, event.OrderID, "CANCELLED")
 	if err != nil {
+		if errors.Is(err, domain.ErrDuplicateEvent) {
+			slog.WarnContext(ctx, "Duplicate payment.failed event detected and ignored", "order_id", event.OrderID)
+			return nil
+		}
 		slog.ErrorContext(ctx, "Failed to update order status to CANCELLED", "order_id", event.OrderID, "error", err)
 		return err
 	}

@@ -2,8 +2,11 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"time"
 )
+
+var ErrDuplicateEvent = errors.New("duplicate event ignored")
 
 type OrderItem struct {
 	ID         string  `json:"id"`

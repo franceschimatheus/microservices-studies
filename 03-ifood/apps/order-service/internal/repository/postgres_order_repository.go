@@ -8,9 +8,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"order-service/internal/domain"
+	"rabbitmq"
 )
 
 type PostgresOrderRepository struct {
@@ -155,6 +157,19 @@ func (r *PostgresOrderRepository) UpdateStatus(ctx context.Context, id string, s
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
+
+	// Idempotency check: insert event ID if present in context
+	if messageID, ok := ctx.Value(rabbitmq.MessageIDKey).(string); ok && messageID != "" {
+		processedQuery := `INSERT INTO processed_events (id, handler_name) VALUES ($1, $2)`
+		_, err = tx.Exec(ctx, processedQuery, messageID, "order-service.UpdateStatus")
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique_violation
+				return domain.ErrDuplicateEvent
+			}
+			return fmt.Errorf("failed to insert processed event: %w", err)
+		}
+	}
 
 	query := `UPDATE orders SET status = $1, updated_at = $2 WHERE id = $3`
 	tag, err := tx.Exec(ctx, query, status, time.Now(), id)

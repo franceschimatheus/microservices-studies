@@ -90,7 +90,8 @@ func (p *OutboxProcessor) processPendingEvents(ctx context.Context) error {
 
 	for _, ev := range events {
 		// Publish the event to RabbitMQ
-		err = p.rabbitClient.Publish(ctx, ev.exchange, ev.routingKey, ev.payload)
+		publishCtx := context.WithValue(ctx, rabbitmq.MessageIDKey, ev.id)
+		err = p.rabbitClient.Publish(publishCtx, ev.exchange, ev.routingKey, ev.payload)
 		if err != nil {
 			slog.Error("Failed to publish outbox event", "id", ev.id, "routing_key", ev.routingKey, "error", err)
 			// On publish error, rollback transaction so we retry on the next tick

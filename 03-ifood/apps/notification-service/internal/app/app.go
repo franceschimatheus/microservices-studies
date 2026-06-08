@@ -77,7 +77,7 @@ func (a *App) Run() error {
 
 	// Setup components and RabbitMQ subscribers
 	notifService := service.NewNotificationService(a.redisClient)
-	notifHandler := handler.NewNotificationHandler(notifService)
+	notifHandler := handler.NewNotificationHandler(notifService, a.redisClient)
 
 	ctx := context.Background()
 

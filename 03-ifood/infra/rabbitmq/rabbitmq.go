@@ -11,6 +11,9 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+type contextKey string
+const MessageIDKey contextKey = "message_id"
+
 // AMQPHeaderCarrier wraps amqp.Table to implement propagation.TextMapCarrier.
 type AMQPHeaderCarrier amqp.Table
 
@@ -163,6 +166,13 @@ func (c *Client) Publish(ctx context.Context, exchange, routingKey string, body 
 	carrier := AMQPHeaderCarrier(headers)
 	otel.GetTextMapPropagator().Inject(ctx, carrier)
 
+	var messageID string
+	if idVal := ctx.Value(MessageIDKey); idVal != nil {
+		if idStr, ok := idVal.(string); ok {
+			messageID = idStr
+		}
+	}
+
 	return ch.PublishWithContext(
 		ctx,
 		exchange,
@@ -170,6 +180,7 @@ func (c *Client) Publish(ctx context.Context, exchange, routingKey string, body 
 		false, // mandatory
 		false, // immediate
 		amqp.Publishing{
+			MessageId:   messageID,
 			ContentType: "application/json",
 			Body:        body,
 			Headers:     headers,
@@ -233,6 +244,11 @@ func (c *Client) Subscribe(ctx context.Context, queueName, exchange, routingKey 
 			// Extract OTel tracing context from message headers
 			carrier := AMQPHeaderCarrier(d.Headers)
 			msgCtx := otel.GetTextMapPropagator().Extract(ctx, carrier)
+
+			// Propagate Message ID in the context if present
+			if d.MessageId != "" {
+				msgCtx = context.WithValue(msgCtx, MessageIDKey, d.MessageId)
+			}
 
 			err := handler(msgCtx, d.Body)
 			if err != nil {

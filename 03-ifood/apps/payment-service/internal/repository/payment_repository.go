@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"payment-service/internal/domain"
+	"rabbitmq"
 )
 
 type PostgresPaymentRepository struct {
@@ -39,12 +41,35 @@ func (r *PostgresPaymentRepository) GetByOrderID(ctx context.Context, orderID st
 }
 
 func (r *PostgresPaymentRepository) Create(ctx context.Context, p *domain.Payment) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Idempotency check: insert event ID if present in context
+	if messageID, ok := ctx.Value(rabbitmq.MessageIDKey).(string); ok && messageID != "" {
+		processedQuery := `INSERT INTO processed_events (id, handler_name) VALUES ($1, $2)`
+		_, err = tx.Exec(ctx, processedQuery, messageID, "payment-service.Create")
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique_violation
+				return domain.ErrDuplicateEvent
+			}
+			return err
+		}
+	}
+
 	query := `
 		INSERT INTO payments (id, order_id, amount, status, created_at, updated_at) 
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := r.db.Exec(ctx, query, p.ID, p.OrderID, p.Amount, p.Status, p.CreatedAt, p.UpdatedAt)
-	return err
+	_, err = tx.Exec(ctx, query, p.ID, p.OrderID, p.Amount, p.Status, p.CreatedAt, p.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresPaymentRepository) UpdateStatus(ctx context.Context, id string, status string) error {
