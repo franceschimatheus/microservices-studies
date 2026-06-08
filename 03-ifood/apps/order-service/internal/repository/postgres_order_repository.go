@@ -21,14 +21,16 @@ func NewPostgresOrderRepository(db *pgxpool.Pool) *PostgresOrderRepository {
 	return &PostgresOrderRepository{db: db}
 }
 
-func (r *PostgresOrderRepository) Create(ctx context.Context, order *domain.Order) error {
+func (r *PostgresOrderRepository) Create(ctx context.Context, order *domain.Order, events ...domain.OutboxEvent) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	order.ID = uuid.New().String()
+	if order.ID == "" {
+		return errors.New("order ID is required")
+	}
 	order.Status = "PENDING"
 	order.CreatedAt = time.Now()
 	order.UpdatedAt = time.Now()
@@ -49,6 +51,17 @@ func (r *PostgresOrderRepository) Create(ctx context.Context, order *domain.Orde
 		_, err = tx.Exec(ctx, itemQuery, item.ID, item.OrderID, item.MenuItemID, item.Name, item.Price, item.Quantity)
 		if err != nil {
 			return fmt.Errorf("failed to insert order item: %w", err)
+		}
+	}
+
+	// Insert outbox events
+	outboxQuery := `INSERT INTO outbox (id, exchange, routing_key, payload, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
+	for _, event := range events {
+		eventID := uuid.New()
+		_, err = tx.Exec(ctx, outboxQuery, eventID, event.Exchange, event.RoutingKey, event.Payload, "PENDING", time.Now())
+		if err != nil {
+			return fmt.Errorf("failed to insert outbox event: %w", err)
 		}
 	}
 
@@ -136,14 +149,36 @@ func (r *PostgresOrderRepository) ListByUserID(ctx context.Context, userID strin
 	return orders, nil
 }
 
-func (r *PostgresOrderRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (r *PostgresOrderRepository) UpdateStatus(ctx context.Context, id string, status string, events ...domain.OutboxEvent) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
 	query := `UPDATE orders SET status = $1, updated_at = $2 WHERE id = $3`
-	tag, err := r.db.Exec(ctx, query, status, time.Now(), id)
+	tag, err := tx.Exec(ctx, query, status, time.Now(), id)
 	if err != nil {
 		return err
 	}
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf("order not found")
 	}
+
+	// Insert outbox events
+	outboxQuery := `INSERT INTO outbox (id, exchange, routing_key, payload, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
+	for _, event := range events {
+		eventID := uuid.New()
+		_, err = tx.Exec(ctx, outboxQuery, eventID, event.Exchange, event.RoutingKey, event.Payload, "PENDING", time.Now())
+		if err != nil {
+			return fmt.Errorf("failed to insert outbox event: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return nil
 }

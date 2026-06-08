@@ -32,6 +32,7 @@ type App struct {
 	gRPCServer   *grpc.Server
 	otelShutdown func(context.Context) error
 	rabbitClient *rabbitmq.Client
+	outboxCancel context.CancelFunc
 }
 
 func New(cfg *config.Config) (*App, error) {
@@ -139,6 +140,12 @@ func (a *App) Run() error {
 	paymentConsumer := handler.NewPaymentConsumer(orderServ)
 	deliveryConsumer := handler.NewDeliveryConsumer(orderServ)
 
+	// Start background Outbox Processor
+	outboxCtx, outboxCancel := context.WithCancel(context.Background())
+	a.outboxCancel = outboxCancel
+	outboxProc := repository.NewOutboxProcessor(a.db, a.rabbitClient, 500*time.Millisecond)
+	go outboxProc.Start(outboxCtx)
+
 	ctx := context.Background()
 	// Subscribe to payment.completed
 	err = a.rabbitClient.Subscribe(ctx, "order.payment-completed.queue", "payments.exchange", "payment.completed", paymentConsumer.HandlePaymentCompleted)
@@ -181,6 +188,9 @@ func (a *App) Run() error {
 }
 
 func (a *App) Close() {
+	if a.outboxCancel != nil {
+		a.outboxCancel()
+	}
 	if a.gRPCServer != nil {
 		a.gRPCServer.GracefulStop()
 	}

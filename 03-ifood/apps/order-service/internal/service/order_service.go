@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"order-service/internal/domain"
 	"rabbitmq"
 )
@@ -56,20 +57,14 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, userID, restaurantID
 	}
 
 	order := &domain.Order{
+		ID:           uuid.New().String(),
 		UserID:       userID,
 		RestaurantID: restaurantID,
 		TotalPrice:   totalPrice,
 		Items:        items,
 	}
 
-	if err := s.repo.Create(ctx, order); err != nil {
-		slog.ErrorContext(ctx, "failed to create order in repo", "error", err)
-		return nil, err
-	}
-
-	slog.InfoContext(ctx, "order created successfully", "order_id", order.ID, "total_price", order.TotalPrice)
-
-	// Publish order.created event to RabbitMQ
+	// Prepare order.created outbox event payload
 	eventPayload := map[string]any{
 		"order_id": order.ID,
 		"user_id":  order.UserID,
@@ -78,14 +73,21 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, userID, restaurantID
 	payloadBytes, err := json.Marshal(eventPayload)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to marshal order.created event", "error", err)
-	} else {
-		err = s.rabbitClient.Publish(ctx, "orders.exchange", "order.created", payloadBytes)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to publish order.created event", "error", err)
-		} else {
-			slog.InfoContext(ctx, "order.created event published", "order_id", order.ID)
-		}
+		return nil, err
 	}
+
+	outboxEvent := domain.OutboxEvent{
+		Exchange:   "orders.exchange",
+		RoutingKey: "order.created",
+		Payload:    payloadBytes,
+	}
+
+	if err := s.repo.Create(ctx, order, outboxEvent); err != nil {
+		slog.ErrorContext(ctx, "failed to create order in repo with outbox", "error", err)
+		return nil, err
+	}
+
+	slog.InfoContext(ctx, "order created and outbox event registered successfully", "order_id", order.ID, "total_price", order.TotalPrice)
 
 	return order, nil
 }
@@ -131,14 +133,7 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 		return nil, err
 	}
 
-	if err := s.repo.UpdateStatus(ctx, id, status); err != nil {
-		slog.ErrorContext(ctx, "failed to update order status", "order_id", id, "status", status, "error", err)
-		return nil, err
-	}
-
-	slog.InfoContext(ctx, "order status updated", "order_id", id, "status", status)
-
-	// Publish order.updated event
+	// Prepare order.updated event
 	eventPayload := map[string]any{
 		"order_id": id,
 		"user_id":  order.UserID,
@@ -147,14 +142,21 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 	payloadBytes, err := json.Marshal(eventPayload)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to marshal order.updated event", "error", err)
-	} else {
-		err = s.rabbitClient.Publish(ctx, "orders.exchange", "order.updated", payloadBytes)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to publish order.updated event", "error", err)
-		} else {
-			slog.InfoContext(ctx, "order.updated event published", "order_id", id, "status", status)
-		}
+		return nil, err
 	}
+
+	outboxEvent := domain.OutboxEvent{
+		Exchange:   "orders.exchange",
+		RoutingKey: "order.updated",
+		Payload:    payloadBytes,
+	}
+
+	if err := s.repo.UpdateStatus(ctx, id, status, outboxEvent); err != nil {
+		slog.ErrorContext(ctx, "failed to update order status with outbox", "order_id", id, "status", status, "error", err)
+		return nil, err
+	}
+
+	slog.InfoContext(ctx, "order status updated and outbox event registered successfully", "order_id", id, "status", status)
 
 	order.Status = status
 	return order, nil

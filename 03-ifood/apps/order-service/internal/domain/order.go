@@ -25,9 +25,16 @@ type Order struct {
 	UpdatedAt    time.Time    `json:"updated_at"`
 }
 
+type OutboxEvent struct {
+	Exchange   string
+	RoutingKey string
+	Payload    []byte
+}
+
 type OrderRepository interface {
-	Create(ctx context.Context, order *Order) error
+	Create(ctx context.Context, order *Order, events ...OutboxEvent) error
 	GetByID(ctx context.Context, id string) (*Order, error)
 	ListByUserID(ctx context.Context, userID string) ([]*Order, error)
-	UpdateStatus(ctx context.Context, id string, status string) error
+	UpdateStatus(ctx context.Context, id string, status string, events ...OutboxEvent) error
 }
+
