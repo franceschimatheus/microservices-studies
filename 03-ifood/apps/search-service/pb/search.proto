@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package search;
+
+option go_package = "search-service/pb";
+
+service SearchService {
+  rpc SearchRestaurants (SearchRequest) returns (SearchRestaurantsResponse);
+  rpc SearchMenus (SearchRequest) returns (SearchMenusResponse);
+}
+
+message SearchRequest {
+  string query = 1;
+}
+
+message RestaurantDocument {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string address = 4;
+}
+
+message SearchRestaurantsResponse {
+  repeated RestaurantDocument restaurants = 1;
+}
+
+message MenuDocument {
+  string id = 1;
+  string restaurant_id = 2;
+  string category_id = 3;
+  string name = 4;
+  string description = 5;
+  double price = 6;
+  bool available = 7;
+}
+
+message SearchMenusResponse {
+  repeated MenuDocument items = 1;
+}

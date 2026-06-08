@@ -101,6 +101,19 @@ func (r *PostgresRestaurantRepository) ListCategories(ctx context.Context, resta
 	return categories, nil
 }
 
+func (r *PostgresRestaurantRepository) GetCategoryByID(ctx context.Context, id string) (*domain.Category, error) {
+	query := `SELECT id, restaurant_id, name FROM categories WHERE id = $1`
+	cat := &domain.Category{}
+	err := r.db.QueryRow(ctx, query, id).Scan(&cat.ID, &cat.RestaurantID, &cat.Name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrCategoryNotFound
+		}
+		return nil, err
+	}
+	return cat, nil
+}
+
 func (r *PostgresRestaurantRepository) CreateMenuItem(ctx context.Context, item *domain.MenuItem) error {
 	query := `INSERT INTO menu_items (category_id, name, description, price, available) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`
 	err := r.db.QueryRow(ctx, query, item.CategoryID, item.Name, item.Description, item.Price, item.Available).Scan(&item.ID, &item.CreatedAt)

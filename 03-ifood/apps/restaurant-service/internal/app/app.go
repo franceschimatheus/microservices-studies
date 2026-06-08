@@ -17,6 +17,7 @@ import (
 	"logger"
 	"observability"
 	"prometheus"
+	"rabbitmq"
 	"restaurant-service/internal/config"
 	"restaurant-service/internal/handler"
 	"restaurant-service/internal/repository"
@@ -30,6 +31,7 @@ type App struct {
 	db           *pgxpool.Pool
 	gRPCServer   *grpc.Server
 	otelShutdown func(context.Context) error
+	rabbitClient *rabbitmq.Client
 }
 
 func New(cfg *config.Config) (*App, error) {
@@ -74,10 +76,17 @@ func New(cfg *config.Config) (*App, error) {
 	// Register DB stats collector
 	registerDBMetrics(pool, "restaurant")
 
+	// Initialize RabbitMQ Client and connect
+	rabbitClient := rabbitmq.NewClient(cfg.RabbitMQURL)
+	if err := rabbitClient.Connect(); err != nil {
+		slog.Error("Failed to connect to RabbitMQ on startup", "error", err)
+	}
+
 	return &App{
 		cfg:          cfg,
 		db:           pool,
 		otelShutdown: otelShutdown,
+		rabbitClient: rabbitClient,
 	}, nil
 }
 
@@ -125,7 +134,7 @@ func (a *App) Run() error {
 
 	// 4. Wire Component Layer (Clean Architecture)
 	repo := repository.NewPostgresRestaurantRepository(a.db)
-	serv := service.NewRestaurantServiceImpl(repo)
+	serv := service.NewRestaurantServiceImpl(repo, a.rabbitClient)
 	grpcHandler := handler.NewGrpcRestaurantHandler(serv)
 
 	// Add OTel server handler for tracing propagation
@@ -144,6 +153,9 @@ func (a *App) Close() {
 	}
 	if a.db != nil {
 		a.db.Close()
+	}
+	if a.rabbitClient != nil {
+		a.rabbitClient.Close()
 	}
 	if a.otelShutdown != nil {
 		if err := a.otelShutdown(context.Background()); err != nil {

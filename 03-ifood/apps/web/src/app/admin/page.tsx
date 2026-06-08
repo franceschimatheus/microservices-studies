@@ -62,57 +62,65 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Service Metrics (Grafana)</h3>
-            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Monitor active microservice nodes, trace latency distributions, and view memory allocation rates.
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Service Metrics (Grafana)</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Monitor active microservice nodes, trace latency distributions, and view memory allocation rates.
+              </p>
+            </div>
             <a 
               href="http://localhost:3001" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-indigo-600 border border-indigo-600 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-700 hover:border-indigo-700 transition-all text-center"
+              className="inline-block bg-indigo-600 border border-indigo-600 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-700 hover:border-indigo-700 transition-all text-center self-start"
             >
               Open Grafana 📊
             </a>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Distributed Tracing (Jaeger)</h3>
-            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Trace transaction flows and request propagation paths across microservice boundaries.
-            </p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Distributed Tracing (Jaeger)</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Trace transaction flows and request propagation paths across microservice boundaries.
+              </p>
+            </div>
             <a 
               href="http://localhost:16686" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
             >
               Open Jaeger 🕸️
             </a>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Message Broker (RabbitMQ)</h3>
-            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Inspect message exchanges, queue depths, subscriber bindings, and track event throughput.
-            </p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Message Broker (RabbitMQ)</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Inspect message exchanges, queue depths, subscriber bindings, and track event throughput.
+              </p>
+            </div>
             <a 
               href="http://localhost:15672" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
             >
               Open RabbitMQ 🐇
             </a>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20">
-            <h3 className="text-lg font-bold mb-2">Raw Metrics (Prometheus)</h3>
-            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-              Query Prometheus time-series time metrics directly or inspect raw service endpoints.
-            </p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Raw Metrics (Prometheus)</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Query Prometheus time-series metrics directly or inspect raw service endpoints.
+              </p>
+            </div>
             <div className="flex gap-2.5">
               <a 
                 href="http://localhost:9090" 
@@ -131,6 +139,40 @@ export default function AdminDashboard() {
                 Gateway Metrics
               </a>
             </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Cache Store (Redis View)</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Inspect key-value pairs, cache expirations, and trace session/cart data states.
+              </p>
+            </div>
+            <a 
+              href="http://localhost:5540" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+            >
+              Open Redis Insight 💾
+            </a>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Search Projection DB</h3>
+              <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                Browse indexed restaurants and menu items, query projections, and manage index settings.
+              </p>
+            </div>
+            <a 
+              href="http://localhost:5601" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+            >
+              Open OpenSearch Dashboards 🔍
+            </a>
           </div>
         </div>
       </main>

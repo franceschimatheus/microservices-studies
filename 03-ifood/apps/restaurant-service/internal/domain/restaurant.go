@@ -44,6 +44,7 @@ type RestaurantRepository interface {
 
 	CreateCategory(ctx context.Context, cat *Category) error
 	ListCategories(ctx context.Context, restaurantID string) ([]*Category, error)
+	GetCategoryByID(ctx context.Context, id string) (*Category, error)
 
 	CreateMenuItem(ctx context.Context, item *MenuItem) error
 	UpdateMenuItem(ctx context.Context, item *MenuItem) error

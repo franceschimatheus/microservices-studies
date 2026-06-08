@@ -2,16 +2,88 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"log/slog"
 
+	"rabbitmq"
 	"restaurant-service/internal/domain"
 )
 
 type RestaurantServiceImpl struct {
-	repo domain.RestaurantRepository
+	repo         domain.RestaurantRepository
+	rabbitClient *rabbitmq.Client
 }
 
-func NewRestaurantServiceImpl(repo domain.RestaurantRepository) *RestaurantServiceImpl {
-	return &RestaurantServiceImpl{repo: repo}
+func NewRestaurantServiceImpl(repo domain.RestaurantRepository, rabbitClient *rabbitmq.Client) *RestaurantServiceImpl {
+	return &RestaurantServiceImpl{
+		repo:         repo,
+		rabbitClient: rabbitClient,
+	}
+}
+
+func (s *RestaurantServiceImpl) publishRestaurantEvent(ctx context.Context, action string, rest *domain.Restaurant) {
+	if s.rabbitClient == nil {
+		return
+	}
+	payload := map[string]any{
+		"action": action,
+		"restaurant": map[string]any{
+			"id":          rest.ID,
+			"name":        rest.Name,
+			"description": rest.Description,
+			"address":     rest.Address,
+		},
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal restaurant event", "error", err)
+		return
+	}
+	routingKey := "restaurant.created"
+	if action == "update" {
+		routingKey = "restaurant.updated"
+	}
+	err = s.rabbitClient.Publish(ctx, "restaurants.exchange", routingKey, payloadBytes)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to publish restaurant event", "error", err, "routingKey", routingKey)
+	} else {
+		slog.InfoContext(ctx, "Published restaurant event", "action", action, "restaurant_id", rest.ID)
+	}
+}
+
+func (s *RestaurantServiceImpl) publishMenuEvent(ctx context.Context, action string, item *domain.MenuItem) {
+	if s.rabbitClient == nil {
+		return
+	}
+	var restaurantID string
+	cat, err := s.repo.GetCategoryByID(ctx, item.CategoryID)
+	if err == nil && cat != nil {
+		restaurantID = cat.RestaurantID
+	}
+
+	payload := map[string]any{
+		"action": action,
+		"menu_item": map[string]any{
+			"id":            item.ID,
+			"restaurant_id": restaurantID,
+			"category_id":   item.CategoryID,
+			"name":          item.Name,
+			"description":   item.Description,
+			"price":         item.Price,
+			"available":     item.Available,
+		},
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal menu event", "error", err)
+		return
+	}
+	err = s.rabbitClient.Publish(ctx, "restaurants.exchange", "menu.updated", payloadBytes)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to publish menu event", "error", err)
+	} else {
+		slog.InfoContext(ctx, "Published menu event", "action", action, "item_id", item.ID)
+	}
 }
 
 func (s *RestaurantServiceImpl) CreateRestaurant(ctx context.Context, name, description, address string) (*domain.Restaurant, error) {
@@ -24,6 +96,7 @@ func (s *RestaurantServiceImpl) CreateRestaurant(ctx context.Context, name, desc
 	if err != nil {
 		return nil, err
 	}
+	s.publishRestaurantEvent(ctx, "create", rest)
 	return rest, nil
 }
 
@@ -41,6 +114,7 @@ func (s *RestaurantServiceImpl) UpdateRestaurant(ctx context.Context, id, name, 
 	if err != nil {
 		return nil, err
 	}
+	s.publishRestaurantEvent(ctx, "update", rest)
 	return rest, nil
 }
 
@@ -92,6 +166,7 @@ func (s *RestaurantServiceImpl) CreateMenuItem(ctx context.Context, categoryID, 
 	if err != nil {
 		return nil, err
 	}
+	s.publishMenuEvent(ctx, "upsert", item)
 	return item, nil
 }
 
@@ -110,11 +185,21 @@ func (s *RestaurantServiceImpl) UpdateMenuItem(ctx context.Context, id, name, de
 	if err != nil {
 		return nil, err
 	}
+	s.publishMenuEvent(ctx, "upsert", item)
 	return item, nil
 }
 
 func (s *RestaurantServiceImpl) DeleteMenuItem(ctx context.Context, id string) error {
-	return s.repo.DeleteMenuItem(ctx, id)
+	item, err := s.repo.GetMenuItemByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	err = s.repo.DeleteMenuItem(ctx, id)
+	if err != nil {
+		return err
+	}
+	s.publishMenuEvent(ctx, "delete", item)
+	return nil
 }
 
 func (s *RestaurantServiceImpl) GetMenu(ctx context.Context, restaurantID string) ([]*domain.MenuItem, error) {

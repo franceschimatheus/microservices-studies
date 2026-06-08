@@ -42,6 +42,11 @@ scrape_configs:
     static_configs:
       - targets: ['notification-service:9096']
 
+  - job_name: 'search-service'
+    static_configs:
+      - targets: ['search-service:9092']
+
+
 
 
 

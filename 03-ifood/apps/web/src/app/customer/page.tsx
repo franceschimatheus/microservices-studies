@@ -14,6 +14,8 @@ import { CartDrawer } from '@/features/cart/components/CartDrawer';
 import { OrdersDrawer } from '@/features/orders/components/OrdersDrawer';
 import { Restaurant } from '@/features/restaurants/hooks/useRestaurants';
 import { Store, Plus, Utensils, ShoppingCart, Package } from 'lucide-react';
+import { SearchBar } from '@/features/search/components/SearchBar';
+import { SearchResults } from '@/features/search/components/SearchResults';
 
 export default function CustomerDashboard() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -32,6 +34,36 @@ export default function CustomerDashboard() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{
+    restaurants: Restaurant[];
+    menu_items: any[];
+  } | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const res = await fetch(`http://localhost:8085/search?q=${encodeURIComponent(query)}`);
+      if (!res.ok) {
+        throw new Error('Search failed');
+      }
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading) {
@@ -162,57 +194,73 @@ export default function CustomerDashboard() {
           </button>
         </div>
 
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Utensils className="text-red-500 w-6 h-6" />
-              Featured Restaurants
-            </h2>
-          </div>
+        {/* Search Bar */}
+        <SearchBar
+          searchQuery={searchQuery}
+          searchLoading={searchLoading}
+          onSearch={handleSearch}
+        />
 
-          {restaurantsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 h-48 animate-pulse flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="h-6 bg-slate-800 rounded-lg w-2/3" />
-                    <div className="h-4 bg-slate-800 rounded-lg w-full" />
-                    <div className="h-4 bg-slate-800 rounded-lg w-4/5" />
+        {searchResults ? (
+          <SearchResults
+            searchResults={searchResults}
+            restaurants={restaurants}
+            onSelectRestaurant={setSelectedRestaurant}
+            onAddToCart={handleAddToCart}
+          />
+        ) : (
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Utensils className="text-red-500 w-6 h-6" />
+                Featured Restaurants
+              </h2>
+            </div>
+
+            {restaurantsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 h-48 animate-pulse flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="h-6 bg-slate-800 rounded-lg w-2/3" />
+                      <div className="h-4 bg-slate-800 rounded-lg w-full" />
+                      <div className="h-4 bg-slate-800 rounded-lg w-4/5" />
+                    </div>
+                    <div className="h-4 bg-slate-800 rounded-lg w-1/2" />
                   </div>
-                  <div className="h-4 bg-slate-800 rounded-lg w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : restaurantsError ? (
-            <div className="bg-red-950/20 border border-red-900/50 rounded-2xl p-6 text-red-400 text-center">
-              {restaurantsError}
-            </div>
-          ) : restaurants.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center max-w-xl mx-auto flex flex-col items-center">
-              <Store className="w-16 h-16 text-slate-700 mb-4" />
-              <h3 className="text-xl font-bold mb-2">No restaurants available</h3>
-              <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                Be the first to register a new restaurant in our platform to browse their menus.
-              </p>
-              <button
-                onClick={() => setIsAddOpen(true)}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-all cursor-pointer"
-              >
-                Register a Restaurant
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {restaurants.map((restaurant) => (
-                <RestaurantCard
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  onClick={() => setSelectedRestaurant(restaurant)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : restaurantsError ? (
+              <div className="bg-red-950/20 border border-red-900/50 rounded-2xl p-6 text-red-400 text-center">
+                {restaurantsError}
+              </div>
+            ) : restaurants.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center max-w-xl mx-auto flex flex-col items-center">
+                <Store className="w-16 h-16 text-slate-700 mb-4" />
+                <h3 className="text-xl font-bold mb-2">No restaurants available</h3>
+                <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                  Be the first to register a new restaurant in our platform to browse their menus.
+                </p>
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-all cursor-pointer"
+                >
+                  Register a Restaurant
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {restaurants.map((restaurant) => (
+                  <RestaurantCard
+                    key={restaurant.id}
+                    restaurant={restaurant}
+                    onClick={() => setSelectedRestaurant(restaurant)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Add Restaurant Modal */}

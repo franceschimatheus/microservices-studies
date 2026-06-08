@@ -9,6 +9,7 @@ use (
 	./apps/order-service
 	./apps/payment-service
 	./apps/restaurant-service
+	./apps/search-service
 	./infra/logger
 	./infra/observability
 	./infra/prometheus

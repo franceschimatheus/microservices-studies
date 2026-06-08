@@ -26,6 +26,11 @@ services:
     container_name: redis-insight-ifood
     ports:
       - "5540:5540"
+    environment:
+      - RI_ACCEPT_TERMS_AND_CONDITIONS=true
+      - RI_REDIS_HOST=redis
+      - RI_REDIS_PORT=6379
+      - RI_REDIS_ALIAS=RedisStore
     depends_on:
       - redis
     restart: unless-stopped
@@ -84,9 +89,11 @@ services:
       - BIND_ADDR=0.0.0.0:50052
       - DB_DSN=postgres://restaurant_user:restaurant_password@postgres-restaurant:5432/restaurant_db?sslmode=disable
       - OTEL_COLLECTOR_ADDR=otel-collector:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - postgres-restaurant
       - otel-collector
+      - rabbitmq
     restart: unless-stopped
 
   cart-service:
@@ -221,6 +228,7 @@ services:
       - RESTAURANT_SERVICE_ADDR=restaurant-service:50052
       - CART_SERVICE_ADDR=cart-service:50053
       - ORDER_SERVICE_ADDR=order-service:50054
+      - SEARCH_SERVICE_ADDR=search-service:50056
       - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - REDIS_ADDR=redis:6379
     depends_on:
@@ -228,6 +236,7 @@ services:
       - restaurant-service
       - cart-service
       - order-service
+      - search-service
       - otel-collector
       - redis
     restart: unless-stopped
@@ -253,6 +262,79 @@ services:
       - CONCURRENT_USERS=5
     depends_on:
       - gateway
+    restart: unless-stopped
+
+
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: opensearch-ifood
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.12.0
+    container_name: opensearch-dashboards-ifood
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+    restart: unless-stopped
+
+  opensearch-setup:
+    image: curlimages/curl:latest
+    container_name: opensearch-setup-ifood
+    depends_on:
+      - opensearch-dashboards
+    entrypoint: ["sh", "-c"]
+    command: >
+      "echo 'Waiting for OpenSearch Dashboards to start...';
+      until curl -s -o /dev/null -w '%{http_code}' http://opensearch-dashboards:5601/api/status | grep -q '200'; do
+        sleep 2;
+      done;
+      echo 'Creating restaurants index pattern...';
+      curl -s -X POST http://opensearch-dashboards:5601/api/saved_objects/index-pattern/restaurants -H 'osd-xsrf: true' -H 'Content-Type: application/json' -d '{\"attributes\":{\"title\":\"restaurants\"}}';
+      echo 'Creating menu_items index pattern...';
+      curl -s -X POST http://opensearch-dashboards:5601/api/saved_objects/index-pattern/menu_items -H 'osd-xsrf: true' -H 'Content-Type: application/json' -d '{\"attributes\":{\"title\":\"menu_items\"}}';
+      echo 'OpenSearch Dashboards setup completed!';"
+
+
+
+
+  search-service:
+    build:
+      context: .
+      dockerfile: apps/search-service/Dockerfile
+    container_name: search-service-ifood
+    ports:
+      - "127.0.0.1:50056:50056"
+    environment:
+      - PORT=50056
+      - BIND_ADDR=0.0.0.0:50056
+      - OPENSEARCH_URL=http://opensearch:9200
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
+    depends_on:
+      - opensearch
+      - rabbitmq
+      - otel-collector
     restart: unless-stopped
 
 
@@ -356,3 +438,4 @@ volumes:
   postgres-restaurant-data:
   postgres-order-data:
   postgres-payment-data:
+  opensearch-data:

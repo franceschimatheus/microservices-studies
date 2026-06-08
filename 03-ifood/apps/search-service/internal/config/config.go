@@ -6,7 +6,7 @@ import (
 
 type Config struct {
 	BindAddr          string
-	DBDSN             string
+	OpenSearchURL     string
 	OtelCollectorAddr string
 	RabbitMQURL       string
 }
@@ -14,12 +14,12 @@ type Config struct {
 func Load() *Config {
 	bindAddr := os.Getenv("BIND_ADDR")
 	if bindAddr == "" {
-		bindAddr = "127.0.0.1:50052" // Default port for restaurant service
+		bindAddr = "127.0.0.1:50056"
 	}
 
-	dbDSN := os.Getenv("DB_DSN")
-	if dbDSN == "" {
-		dbDSN = "postgres://restaurant_user:restaurant_password@127.0.0.1:5432/restaurant_db?sslmode=disable"
+	openSearchURL := os.Getenv("OPENSEARCH_URL")
+	if openSearchURL == "" {
+		openSearchURL = "http://127.0.0.1:9200"
 	}
 
 	otelCollectorAddr := os.Getenv("OTEL_COLLECTOR_ADDR")
@@ -34,7 +34,7 @@ func Load() *Config {
 
 	return &Config{
 		BindAddr:          bindAddr,
-		DBDSN:             dbDSN,
+		OpenSearchURL:     openSearchURL,
 		OtelCollectorAddr: otelCollectorAddr,
 		RabbitMQURL:       rabbitMQURL,
 	}

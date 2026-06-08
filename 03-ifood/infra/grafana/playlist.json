@@ -47,6 +47,11 @@
       "type": "dashboard_by_uid",
       "value": "notification-service-perf",
       "order": 9
+    },
+    {
+      "type": "dashboard_by_uid",
+      "value": "search-service-perf",
+      "order": 10
     }
   ]
 }

@@ -23,6 +23,7 @@ import (
 	cartpb "cart-service/pb"
 	orderpb "order-service/pb"
 	respb "restaurant-service/pb"
+	searchpb "search-service/pb"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -34,6 +35,7 @@ type App struct {
 	restaurantConn *grpc.ClientConn
 	cartConn       *grpc.ClientConn
 	orderConn      *grpc.ClientConn
+	searchConn     *grpc.ClientConn
 	redisClient    *redis.Client
 	otelShutdown   func(context.Context) error
 }
@@ -114,6 +116,22 @@ func New(cfg *config.Config) (*App, error) {
 	orderClient := orderpb.NewOrderServiceClient(orderConn)
 	orderHandler := handler.NewOrderHandler(orderClient, cartClient, authClient, redisClient)
 
+	// Connect to Search Service via gRPC with OTel client instrumentation
+	searchConn, err := grpc.NewClient(cfg.SearchServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		observability.GRPCClientStatsHandler(),
+	)
+	if err != nil {
+		conn.Close()
+		restaurantConn.Close()
+		cartConn.Close()
+		orderConn.Close()
+		return nil, fmt.Errorf("failed to connect to Search Service: %w", err)
+	}
+
+	searchClient := searchpb.NewSearchServiceClient(searchConn)
+	searchHandler := handler.NewSearchHandler(searchClient)
+
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
@@ -169,6 +187,7 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Get("/orders/stream", orderHandler.StreamUpdates)
 	fiberApp.Get("/orders/:id", orderHandler.GetOrder)
 	fiberApp.Put("/orders/:id/status", orderHandler.UpdateOrderStatus)
+	fiberApp.Get("/search", searchHandler.Search)
 
 	return &App{
 		cfg:            cfg,
@@ -177,6 +196,7 @@ func New(cfg *config.Config) (*App, error) {
 		restaurantConn: restaurantConn,
 		cartConn:       cartConn,
 		orderConn:      orderConn,
+		searchConn:     searchConn,
 		redisClient:    redisClient,
 		otelShutdown:   otelShutdown,
 	}, nil
@@ -211,6 +231,11 @@ func (a *App) Close() {
 	if a.orderConn != nil {
 		if err := a.orderConn.Close(); err != nil {
 			slog.Error("Error closing Order Service gRPC connection", "error", err)
+		}
+	}
+	if a.searchConn != nil {
+		if err := a.searchConn.Close(); err != nil {
+			slog.Error("Error closing Search Service gRPC connection", "error", err)
 		}
 	}
 	if a.redisClient != nil {

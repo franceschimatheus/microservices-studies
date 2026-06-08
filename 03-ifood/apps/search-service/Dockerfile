@@ -4,19 +4,19 @@ WORKDIR /app
 
 # Copy go.work and modules
 COPY go.work ./
-COPY apps/restaurant-service/ ./apps/restaurant-service/
+COPY apps/search-service/ ./apps/search-service/
 COPY infra/logger/ ./infra/logger/
 COPY infra/observability/ ./infra/observability/
 COPY infra/prometheus/ ./infra/prometheus/
 COPY infra/rabbitmq/ ./infra/rabbitmq/
 
 # Build service
-WORKDIR /app/apps/restaurant-service
-RUN CGO_ENABLED=0 GOOS=linux GOWORK=off go build -o /restaurant-service cmd/server/main.go
+WORKDIR /app/apps/search-service
+RUN CGO_ENABLED=0 GOOS=linux GOWORK=off go build -o /search-service cmd/server/main.go
 
 # Final stage
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /restaurant-service /restaurant-service
-EXPOSE 50052
-ENTRYPOINT ["/restaurant-service"]
+COPY --from=builder /search-service /search-service
+EXPOSE 50056
+ENTRYPOINT ["/search-service"]

@@ -16,6 +16,7 @@ require (
 	order-service v0.0.0-00010101000000-000000000000
 	prometheus v0.0.0-00010101000000-000000000000
 	restaurant-service v0.0.0-00010101000000-000000000000
+	search-service v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -64,4 +65,5 @@ replace (
 	order-service => ../order-service
 	prometheus => ../../infra/prometheus
 	restaurant-service => ../restaurant-service
+	search-service => ../search-service
 )

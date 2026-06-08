@@ -10,6 +10,7 @@ type Config struct {
 	RestaurantServiceAddr string
 	CartServiceAddr       string
 	OrderServiceAddr      string
+	SearchServiceAddr     string
 	OtelCollectorAddr     string
 	RedisAddr             string
 }
@@ -40,6 +41,11 @@ func Load() *Config {
 		orderServiceAddr = "127.0.0.1:50054"
 	}
 
+	searchServiceAddr := os.Getenv("SEARCH_SERVICE_ADDR")
+	if searchServiceAddr == "" {
+		searchServiceAddr = "127.0.0.1:50056"
+	}
+
 	otelCollectorAddr := os.Getenv("OTEL_COLLECTOR_ADDR")
 	if otelCollectorAddr == "" {
 		otelCollectorAddr = "127.0.0.1:4317"
@@ -56,6 +62,7 @@ func Load() *Config {
 		RestaurantServiceAddr: restaurantServiceAddr,
 		CartServiceAddr:       cartServiceAddr,
 		OrderServiceAddr:      orderServiceAddr,
+		SearchServiceAddr:     searchServiceAddr,
 		OtelCollectorAddr:     otelCollectorAddr,
 		RedisAddr:             redisAddr,
 	}
