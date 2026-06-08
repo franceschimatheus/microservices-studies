@@ -681,7 +681,7 @@ loki
 - [x] dashboards (Grafana with Loki, Jaeger, and Prometheus datasources)
 - [x] log aggregation (Loki + Promtail container log shipping)
 
-*Note: Completed for gateway, auth-service, restaurant-service, order-service, cart-service, and web dashboards.*
+*Note: Completed for all services (gateway, auth-service, restaurant-service, order-service, cart-service, payment-service, delivery-service, and notification-service) along with web dashboards.*
 
 ---
 
