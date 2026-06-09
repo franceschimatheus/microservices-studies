@@ -66,7 +66,7 @@ export default function AdminKPIsPage() {
           
           <button 
             onClick={() => refetch()}
-            className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-750 text-slate-200 font-bold py-2.5 px-5 rounded-xl transition-all shadow-md text-sm cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-2 bg-slate-900 border border-slate-900/60 hover:bg-slate-900 hover:border-slate-800 text-slate-200 font-bold py-2.5 px-5 rounded-xl transition-all shadow-md text-sm cursor-pointer whitespace-nowrap"
           >
             🔄 Refresh Metrics
           </button>
@@ -101,7 +101,7 @@ export default function AdminKPIsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* 1. Total Orders Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 hover:border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 hover:border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-1 px-3 rounded-full">
@@ -121,7 +121,7 @@ export default function AdminKPIsPage() {
             </div>
 
             {/* 2. Total Revenue Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 hover:border-emerald-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 hover:border-emerald-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 py-1 px-3 rounded-full">
@@ -141,7 +141,7 @@ export default function AdminKPIsPage() {
             </div>
 
             {/* 3. Payment Success Rate */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 hover:border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 hover:border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-1 px-3 rounded-full">
@@ -161,7 +161,7 @@ export default function AdminKPIsPage() {
             </div>
 
             {/* 4. Order Status Distribution Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 hover:border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl lg:col-span-2 group">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 hover:border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl lg:col-span-2 group">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-1 px-3 rounded-full">
@@ -212,7 +212,7 @@ export default function AdminKPIsPage() {
             </div>
 
             {/* 5. Delivery Latency Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 hover:border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 hover:border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-1 px-3 rounded-full">

@@ -26,7 +26,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
 
   if (isInline) {
     return (
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-slate-950 border border-indigo-500/20 rounded-2xl p-5 flex flex-col gap-4 animate-fadeIn">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-slate-950 border border-indigo-900/60 rounded-2xl p-5 flex flex-col gap-4 animate-fadeIn">
         <div className="flex justify-between items-center">
           <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">{title}</h4>
           <button 
@@ -44,7 +44,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
               type="text" 
               placeholder="e.g. Classic Margherita Pizza"
               {...register('name')}
-              className="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+              className="bg-slate-900 border border-slate-900/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
             />
             {errors.name && <span className="text-rose-500 text-[10px]">{errors.name.message}</span>}
           </div>
@@ -55,7 +55,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
               step="0.01" 
               placeholder="12.99"
               {...register('price', { valueAsNumber: true })}
-              className="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+              className="bg-slate-900 border border-slate-900/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
             />
             {errors.price && <span className="text-rose-500 text-[10px]">{errors.price.message}</span>}
           </div>
@@ -66,7 +66,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
             type="text" 
             placeholder="e.g. Fresh tomatoes, mozzarella, basil"
             {...register('description')}
-            className="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+            className="bg-slate-900 border border-slate-900/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
           />
           {errors.description && <span className="text-rose-500 text-[10px]">{errors.description.message}</span>}
         </div>
@@ -90,7 +90,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
         <input 
           type="text" 
           {...register('name')}
-          className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
+          className="bg-slate-900 border border-slate-900/80 rounded-lg p-2 text-xs text-white"
         />
         {errors.name && <span className="text-rose-500 text-[9px]">{errors.name.message}</span>}
       </div>
@@ -99,7 +99,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
         <input 
           type="text" 
           {...register('description')}
-          className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
+          className="bg-slate-900 border border-slate-900/80 rounded-lg p-2 text-xs text-white"
         />
         {errors.description && <span className="text-rose-500 text-[9px]">{errors.description.message}</span>}
       </div>
@@ -110,7 +110,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
             type="number" 
             step="0.01"
             {...register('price', { valueAsNumber: true })}
-            className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
+            className="bg-slate-900 border border-slate-900/80 rounded-lg p-2 text-xs text-white"
           />
           {errors.price && <span className="text-rose-500 text-[9px]">{errors.price.message}</span>}
         </div>
@@ -119,7 +119,7 @@ export function MenuItemForm({ initialData, onSubmit, onCancel, title, submitLab
             <input 
               type="checkbox" 
               {...register('available')}
-              className="mr-2 rounded border-slate-800 bg-slate-900 text-indigo-500 focus:ring-0 cursor-pointer"
+              className="mr-2 rounded border-slate-900 bg-slate-900 text-indigo-500 focus:ring-0 cursor-pointer"
             />
             Available
           </label>

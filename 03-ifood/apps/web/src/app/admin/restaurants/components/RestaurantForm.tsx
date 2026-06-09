@@ -23,7 +23,7 @@ export function RestaurantForm({ initialData, onSubmit, onCancel, title }: Resta
   });
 
   return (
-    <div className="bg-slate-900/50 border border-slate-850 rounded-3xl p-6 md:p-8 animate-fadeIn">
+    <div className="bg-slate-900/50 border border-slate-900/80 rounded-3xl p-6 md:p-8 animate-fadeIn">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold">{title}</h3>
         <button 
@@ -41,7 +41,7 @@ export function RestaurantForm({ initialData, onSubmit, onCancel, title }: Resta
             type="text" 
             placeholder="e.g. Gourmet Burger Bistro"
             {...register('name')}
-            className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
+            className="bg-slate-950 border border-slate-900/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
           />
           {errors.name && <span className="text-rose-500 text-xs font-medium">{errors.name.message}</span>}
         </div>
@@ -52,7 +52,7 @@ export function RestaurantForm({ initialData, onSubmit, onCancel, title }: Resta
             type="text" 
             placeholder="e.g. 742 Evergreen Terrace, Springfield"
             {...register('address')}
-            className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
+            className="bg-slate-950 border border-slate-900/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
           />
           {errors.address && <span className="text-rose-500 text-xs font-medium">{errors.address.message}</span>}
         </div>
@@ -63,7 +63,7 @@ export function RestaurantForm({ initialData, onSubmit, onCancel, title }: Resta
             placeholder="Describe the restaurant, cuisine type, active hours..."
             rows={3}
             {...register('description')}
-            className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all resize-none"
+            className="bg-slate-950 border border-slate-900/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all resize-none"
           />
           {errors.description && <span className="text-rose-500 text-xs font-medium">{errors.description.message}</span>}
         </div>

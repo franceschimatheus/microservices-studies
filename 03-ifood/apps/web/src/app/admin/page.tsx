@@ -9,6 +9,7 @@ import Link from 'next/link';
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const [isResetting, setIsResetting] = React.useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -25,6 +26,35 @@ export default function AdminDashboard() {
   const switchToCustomerView = () => {
     localStorage.setItem('admin_view_mode', 'customer');
     router.push('/customer');
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm("WARNING: Are you absolutely sure you want to reset the system? This will clear all orders, carts, analytics events, open search indexes, and restore 2 default restaurants.")) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const res = await fetch('http://localhost:8085/admin/reset-system', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to reset system');
+      }
+
+      alert('System reset and seeded successfully! Logging out.');
+      logout();
+    } catch (err: any) {
+      alert(err.message || 'An error occurred during reset.');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   if (loading || !user || user.role !== 'admin') {
@@ -46,7 +76,7 @@ export default function AdminDashboard() {
       <Navbar email={user.email} role={user.role} onLogout={logout} />
 
       <main className="flex-1 p-10 max-w-7xl w-full mx-auto">
-        <div className="bg-gradient-to-r from-indigo-950/20 to-slate-950 border border-slate-800 rounded-3xl p-10 mb-8 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="bg-gradient-to-r from-indigo-950/20 to-slate-950 border border-slate-900/80 rounded-3xl p-10 mb-8 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-extrabold mb-3 tracking-tight">
               Admin Management Console 🛡️
@@ -55,17 +85,32 @@ export default function AdminDashboard() {
               Manage system services, inspect restaurant configurations, monitor order topics, and track platform metrics.
             </p>
           </div>
-          <button 
-            onClick={switchToCustomerView}
-            className="shrink-0 bg-red-600 border border-red-650 text-white text-sm font-bold py-3.5 px-6 rounded-2xl hover:bg-red-700 hover:border-red-700 transition-all cursor-pointer shadow-lg"
-          >
-            Buy Products (Customer View) 🛒
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 shrink-0 mt-4 md:mt-0">
+            <Link 
+              href="/admin/architecture"
+              className="shrink-0 bg-transparent border border-indigo-900/60 hover:bg-indigo-500/10 text-indigo-400 text-sm font-bold py-3.5 px-6 rounded-2xl transition-all cursor-pointer shadow-lg text-center flex items-center justify-center"
+            >
+              System Architecture 📖
+            </Link>
+            <button 
+              onClick={handleReset}
+              disabled={isResetting}
+              className="shrink-0 bg-transparent border border-red-900/60 hover:bg-red-500/10 text-red-400 disabled:opacity-50 text-sm font-bold py-3.5 px-6 rounded-2xl transition-all cursor-pointer shadow-lg"
+            >
+              {isResetting ? 'Resetting System... 🔄' : 'Reset System & Seed ⚠️'}
+            </button>
+            <button 
+              onClick={switchToCustomerView}
+              className="shrink-0 bg-red-600 border border-red-650 text-white text-sm font-bold py-3.5 px-6 rounded-2xl hover:bg-red-700 hover:border-red-700 transition-all cursor-pointer shadow-lg"
+            >
+              Buy Products (Customer View) 🛒
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card 1: Restaurant & Menu Control */}
-          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/60 flex flex-col justify-between shadow-lg">
+          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-900 flex flex-col justify-between shadow-lg">
             <div>
               <div className="text-3xl mb-4">🍔</div>
               <h3 className="text-xl font-bold mb-2 text-indigo-300">Restaurant & Menu Control</h3>
@@ -82,7 +127,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Card 2: KPIs & Insights */}
-          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/60 flex flex-col justify-between shadow-lg">
+          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-900 flex flex-col justify-between shadow-lg">
             <div>
               <div className="text-3xl mb-4">📈</div>
               <h3 className="text-xl font-bold mb-2 text-indigo-300">KPIs & Insights</h3>
@@ -99,7 +144,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Card 3: Infra & Monitoring */}
-          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/60 flex flex-col justify-between shadow-lg">
+          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-950 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-900 flex flex-col justify-between shadow-lg">
             <div>
               <div className="text-3xl mb-4">🖥️</div>
               <h3 className="text-xl font-bold mb-2 text-indigo-300">Infra & Monitoring</h3>

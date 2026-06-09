@@ -198,7 +198,7 @@ export default function AdminRestaurantsPage() {
 
       <main className="flex-1 p-6 md:p-10 max-w-7xl w-full mx-auto flex flex-col gap-8">
         {/* Navigation & Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-850 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900 pb-6">
           <div>
             <Link 
               href="/admin"
@@ -225,7 +225,7 @@ export default function AdminRestaurantsPage() {
             {resLoading && <div className="text-slate-400 py-4 text-center">Loading locations...</div>}
             
             {!resLoading && restaurants.length === 0 && (
-              <div className="text-slate-500 text-center py-12 border border-dashed border-slate-800 rounded-3xl bg-slate-900/10">
+              <div className="text-slate-500 text-center py-12 border border-dashed border-slate-900/80 rounded-3xl bg-slate-900/10">
                 No restaurants found. Create one to begin.
               </div>
             )}
@@ -239,8 +239,8 @@ export default function AdminRestaurantsPage() {
                     onClick={() => { setSelectedRestaurant(res); setIsEditingRestaurant(false); setIsAddingRestaurant(false); }}
                     className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                       isSelected 
-                        ? 'bg-indigo-950/20 border-indigo-500/50 shadow-indigo-950/20' 
-                        : 'bg-slate-900/40 border-slate-850 hover:border-slate-700 hover:bg-slate-900/60'
+                        ? 'bg-indigo-950/20 border-indigo-900/60 shadow-indigo-950/20' 
+                        : 'bg-slate-900/40 border-slate-900/80 hover:border-slate-800 hover:bg-slate-900/60'
                     }`}
                   >
                     <div>
@@ -264,7 +264,7 @@ export default function AdminRestaurantsPage() {
                       </div>
                       <p className="text-slate-400 text-xs line-clamp-2 mb-3 leading-relaxed">{res.description || 'No description provided.'}</p>
                     </div>
-                    <div className="text-slate-500 text-[11px] border-t border-slate-850/60 pt-3 flex items-center justify-between">
+                    <div className="text-slate-500 text-[11px] border-t border-slate-900/40 pt-3 flex items-center justify-between">
                       <span>📍 {res.address}</span>
                       {isSelected && <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Active</span>}
                     </div>
@@ -302,7 +302,7 @@ export default function AdminRestaurantsPage() {
             {selectedRestaurant && !isEditingRestaurant && !isAddingRestaurant && (
               <div className="flex flex-col gap-6 animate-fadeIn">
                 {/* Active Restaurant Header & Category Creator */}
-                <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="bg-slate-900 border border-slate-900/80 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
                     <h2 className="text-2xl font-extrabold text-white">{selectedRestaurant.name}</h2>
                     <p className="text-slate-400 text-xs mt-1">📍 {selectedRestaurant.address}</p>
@@ -314,7 +314,7 @@ export default function AdminRestaurantsPage() {
                 {loadingMenu && <div className="text-slate-400 py-12 text-center">Loading menu and categories...</div>}
 
                 {!loadingMenu && categories.length === 0 && (
-                  <div className="text-slate-500 text-center py-20 border border-dashed border-slate-800 rounded-3xl bg-slate-900/10">
+                  <div className="text-slate-500 text-center py-20 border border-dashed border-slate-900/80 rounded-3xl bg-slate-900/10">
                     No categories registered. Create a category to start building this restaurant's menu.
                   </div>
                 )}
@@ -325,8 +325,8 @@ export default function AdminRestaurantsPage() {
                     {categories.map((cat) => {
                       const itemsInCat = menuItems.filter(item => item.category_id === cat.id);
                       return (
-                        <div key={cat.id} className="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 flex flex-col gap-4">
-                          <div className="flex justify-between items-center border-b border-slate-850/60 pb-3">
+                        <div key={cat.id} className="bg-slate-900/30 border border-slate-900/80 rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-900/40 pb-3">
                             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                               📁 {cat.name} 
                               <span className="text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full">
@@ -365,7 +365,7 @@ export default function AdminRestaurantsPage() {
                                 return (
                                   <div 
                                     key={item.id} 
-                                    className={`bg-slate-950/60 border rounded-2xl p-5 flex flex-col justify-between transition-all ${isEditing ? 'border-indigo-500' : 'border-slate-850'}`}
+                                    className={`bg-slate-950/60 border rounded-2xl p-5 flex flex-col justify-between transition-all ${isEditing ? 'border-indigo-900/60' : 'border-slate-900/80'}`}
                                   >
                                     {isEditing ? (
                                       <MenuItemForm 
@@ -394,7 +394,7 @@ export default function AdminRestaurantsPage() {
                                           </p>
                                         </div>
 
-                                        <div className="flex justify-between items-center border-t border-slate-850/40 pt-3 mt-1">
+                                        <div className="flex justify-between items-center border-t border-slate-900/25 pt-3 mt-1">
                                           <button
                                             onClick={() => toggleItemAvailability(item)}
                                             className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition-all cursor-pointer ${
@@ -439,7 +439,7 @@ export default function AdminRestaurantsPage() {
             )}
 
             {!selectedRestaurant && !isAddingRestaurant && !isEditingRestaurant && (
-              <div className="bg-slate-900/20 border border-slate-850 border-dashed rounded-3xl py-24 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
+              <div className="bg-slate-900/20 border border-slate-900/80 border-dashed rounded-3xl py-24 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
                 <span className="text-4xl">🍕</span>
                 <span className="font-semibold text-sm">Select a restaurant location from the left to manage its categories and menu items.</span>
               </div>

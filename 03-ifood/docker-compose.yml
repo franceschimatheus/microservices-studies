@@ -280,6 +280,32 @@ services:
       - gateway
     restart: unless-stopped
 
+  bootstrap-service:
+    build:
+      context: .
+      dockerfile: apps/bootstrap/Dockerfile
+    container_name: bootstrap-service-ifood
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      - PORT=8090
+      - AUTH_DB_URL=postgres://auth_user:auth_password@postgres-auth:5432/auth_db?sslmode=disable
+      - RESTAURANT_DB_URL=postgres://restaurant_user:restaurant_password@postgres-restaurant:5432/restaurant_db?sslmode=disable
+      - ORDER_DB_URL=postgres://order_user:order_password@postgres-order:5432/order_db?sslmode=disable
+      - ANALYTICS_DB_URL=postgres://analytics_user:analytics_password@postgres-analytics:5432/analytics_db?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - OPENSEARCH_URL=http://opensearch:9200
+      - GATEWAY_URL=http://gateway:8080
+    depends_on:
+      - postgres-auth
+      - postgres-restaurant
+      - postgres-order
+      - postgres-analytics
+      - redis
+      - opensearch
+      - gateway
+    restart: unless-stopped
+
 
   opensearch:
     image: opensearchproject/opensearch:2.12.0

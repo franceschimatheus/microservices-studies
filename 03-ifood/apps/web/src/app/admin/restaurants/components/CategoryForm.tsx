@@ -32,7 +32,7 @@ export function CategoryForm({ onSubmit }: CategoryFormProps) {
           type="text" 
           placeholder="Category name (e.g. Pasta)"
           {...register('name')}
-          className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all w-full md:w-48"
+          className="bg-slate-950 border border-slate-900/80 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all w-full md:w-48"
         />
         <button 
           type="submit"

@@ -13,7 +13,7 @@ export function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
   return (
     <div 
       onClick={onClick}
-      className="bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:-translate-y-1 hover:border-red-500/30 transition-all duration-300 shadow-lg flex flex-col justify-between cursor-pointer group"
+      className="bg-slate-900 border border-slate-900/80 rounded-3xl p-6 hover:-translate-y-1 hover:border-red-500/30 transition-all duration-300 shadow-lg flex flex-col justify-between cursor-pointer group"
     >
       <div>
         <div className="flex items-center gap-3 mb-3">
@@ -26,7 +26,7 @@ export function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
           {restaurant.description || 'No description provided.'}
         </p>
       </div>
-      <div className="flex items-center justify-between border-t border-slate-850 pt-4 mt-2">
+      <div className="flex items-center justify-between border-t border-slate-900/80 pt-4 mt-2">
         <div className="flex items-center gap-2 text-slate-500 text-xs truncate max-w-[70%]">
           <MapPin className="w-4 h-4 shrink-0 text-red-500/70" />
           <span className="truncate">{restaurant.address}</span>

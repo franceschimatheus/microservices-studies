@@ -150,6 +150,7 @@ func New(cfg *config.Config) (*App, error) {
 
 	analyticsClient := analyticspb.NewAnalyticsServiceClient(analyticsConn)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsClient, authClient)
+	systemHandler := handler.NewSystemHandler(authClient)
 
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -219,6 +220,7 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Put("/orders/:id/status", orderHandler.UpdateOrderStatus)
 	fiberApp.Get("/search", searchHandler.Search)
 	fiberApp.Get("/admin/kpis", analyticsHandler.GetKPIs)
+	fiberApp.Post("/admin/reset-system", systemHandler.ResetSystem)
 
 	return &App{
 		cfg:            cfg,

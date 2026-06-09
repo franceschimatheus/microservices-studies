@@ -11,6 +11,7 @@ use (
 	./apps/analytics-service
 	./apps/restaurant-service
 	./apps/search-service
+	./apps/bootstrap
 	./infra/logger
 	./infra/observability
 	./infra/prometheus

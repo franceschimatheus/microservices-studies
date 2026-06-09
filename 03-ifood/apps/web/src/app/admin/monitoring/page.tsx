@@ -125,7 +125,7 @@ export default function AdminMonitoringPage() {
           {monitoringTools.map((tool) => (
             <div 
               key={tool.name}
-              className={`bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 ${tool.borderColor} rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group`}
+              className={`bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900/80 ${tool.borderColor} rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-xl group`}
             >
               <div>
                 <div className="flex justify-between items-center mb-6">
@@ -146,7 +146,7 @@ export default function AdminMonitoringPage() {
                 href={tool.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-slate-950 hover:bg-indigo-950/20 border border-slate-800 hover:border-indigo-500/30 text-slate-200 hover:text-white text-xs font-semibold py-2.5 px-5 rounded-xl transition-all text-center self-start"
+                className="inline-block bg-slate-950 hover:bg-indigo-950/20 border border-slate-900/60 hover:border-indigo-955 text-slate-200 hover:text-white text-xs font-semibold py-2.5 px-5 rounded-xl transition-all text-center self-start"
               >
                 Open Dashboard →
               </a>
