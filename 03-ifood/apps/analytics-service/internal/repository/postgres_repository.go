@@ -127,6 +127,7 @@ func (r *PostgresAnalyticsRepository) UpsertDeliveryRefined(ctx context.Context,
 		ON CONFLICT (order_id) 
 		DO UPDATE SET 
 			status = EXCLUDED.status,
+			user_id = CASE WHEN EXCLUDED.user_id <> '00000000-0000-0000-0000-000000000000' THEN EXCLUDED.user_id ELSE deliveries_refined.user_id END,
 			assigned_at = COALESCE(EXCLUDED.assigned_at, deliveries_refined.assigned_at),
 			completed_at = COALESCE(EXCLUDED.completed_at, deliveries_refined.completed_at);
 	`
@@ -136,3 +137,35 @@ func (r *PostgresAnalyticsRepository) UpsertDeliveryRefined(ctx context.Context,
 	}
 	return nil
 }
+
+func (r *PostgresAnalyticsRepository) GetKPIs(ctx context.Context) (*domain.KPIResponse, error) {
+	var kpi domain.KPIResponse
+
+	// Query kpi_orders_summary
+	queryOrders := "SELECT total_orders, total_revenue, total_delivered_orders, total_cancelled_orders FROM kpi_orders_summary;"
+	err := r.db.QueryRow(ctx, queryOrders).Scan(&kpi.TotalOrders, &kpi.TotalRevenue, &kpi.TotalDeliveredOrders, &kpi.TotalCancelledOrders)
+	if err != nil {
+		// If no orders exist yet, Scan might fail. We initialize to default empty values.
+		kpi.TotalOrders = 0
+		kpi.TotalRevenue = 0.0
+		kpi.TotalDeliveredOrders = 0
+		kpi.TotalCancelledOrders = 0
+	}
+
+	// Query kpi_payment_success_rate
+	queryPayments := "SELECT success_rate FROM kpi_payment_success_rate;"
+	err = r.db.QueryRow(ctx, queryPayments).Scan(&kpi.PaymentSuccessRate)
+	if err != nil {
+		kpi.PaymentSuccessRate = 0.0
+	}
+
+	// Query kpi_delivery_performance
+	queryDelivery := "SELECT avg_delivery_seconds FROM kpi_delivery_performance;"
+	err = r.db.QueryRow(ctx, queryDelivery).Scan(&kpi.AvgDeliverySeconds)
+	if err != nil {
+		kpi.AvgDeliverySeconds = 0.0
+	}
+
+	return &kpi, nil
+}
+

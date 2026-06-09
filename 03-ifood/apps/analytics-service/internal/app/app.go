@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -11,12 +12,14 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
 
 	"analytics-service/internal/config"
 	"analytics-service/internal/handler"
 	"analytics-service/internal/repository"
 	"analytics-service/internal/service"
 	"analytics-service/migrations"
+	pb "analytics-service/pb"
 	"logger"
 	"observability"
 	"prometheus"
@@ -28,6 +31,7 @@ type App struct {
 	db              *pgxpool.Pool
 	otelShutdown    func(context.Context) error
 	rabbitClient    *rabbitmq.Client
+	gRPCServer      *grpc.Server
 	workerCtxCancel context.CancelFunc
 	workerDone      chan struct{}
 }
@@ -80,11 +84,20 @@ func New(cfg *config.Config) (*App, error) {
 		slog.Error("Failed to connect to RabbitMQ on startup", "error", err)
 	}
 
+	repo := repository.NewPostgresAnalyticsRepository(pool)
+	grpcHandler := handler.NewGrpcAnalyticsHandler(repo)
+
+	gRPCServer := grpc.NewServer(
+		observability.GRPCServerStatsHandler(),
+	)
+	pb.RegisterAnalyticsServiceServer(gRPCServer, grpcHandler)
+
 	return &App{
 		cfg:          cfg,
 		db:           pool,
 		otelShutdown: otelShutdown,
 		rabbitClient: rabbitClient,
+		gRPCServer:   gRPCServer,
 		workerDone:   make(chan struct{}),
 	}, nil
 }
@@ -169,6 +182,19 @@ func (a *App) Run() error {
 
 	slog.Info("Analytics Service consumers running successfully")
 
+	// Start gRPC server
+	lis, err := net.Listen("tcp", a.cfg.BindAddr)
+	if err != nil {
+		return fmt.Errorf("failed to listen on gRPC port %s: %w", a.cfg.BindAddr, err)
+	}
+
+	go func() {
+		slog.Info("Analytics gRPC Server is running", "bind_addr", a.cfg.BindAddr)
+		if err := a.gRPCServer.Serve(lis); err != nil {
+			slog.Error("gRPC server serve failure", "error", err)
+		}
+	}()
+
 	// 4. Start background ETL worker loop (Bronze -> Silver)
 	workerCtx, workerCancel := context.WithCancel(context.Background())
 	a.workerCtxCancel = workerCancel
@@ -197,6 +223,10 @@ func (a *App) Run() error {
 }
 
 func (a *App) Close() {
+	if a.gRPCServer != nil {
+		a.gRPCServer.GracefulStop()
+	}
+
 	if a.workerCtxCancel != nil {
 		a.workerCtxCancel()
 	}

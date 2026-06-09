@@ -688,8 +688,8 @@ loki
 ## Phase 6 — Search + Analytics
 
 - [x] OpenSearch projections
-- [ ] analytics consumers
-- [ ] admin operational dashboards
+- [x] analytics consumers
+- [x] admin operational dashboards
 
 ---
 

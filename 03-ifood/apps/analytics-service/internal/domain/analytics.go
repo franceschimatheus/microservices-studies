@@ -90,6 +90,15 @@ type DeliveryRefined struct {
 	CreatedAt   time.Time  `json:"created_at"`
 }
 
+type KPIResponse struct {
+	TotalOrders          int64   `json:"total_orders"`
+	TotalRevenue         float64 `json:"total_revenue"`
+	TotalDeliveredOrders int64   `json:"total_delivered_orders"`
+	TotalCancelledOrders int64   `json:"total_cancelled_orders"`
+	PaymentSuccessRate   float64 `json:"payment_success_rate"`
+	AvgDeliverySeconds   float64 `json:"avg_delivery_seconds"`
+}
+
 // AnalyticsRepository defines the database operations abstraction for the domain
 type AnalyticsRepository interface {
 	SaveRawEvent(ctx context.Context, id string, eventType string, payload []byte) error
@@ -98,6 +107,7 @@ type AnalyticsRepository interface {
 	UpsertOrderRefined(ctx context.Context, order *OrderRefined) error
 	UpsertPaymentRefined(ctx context.Context, payment *PaymentRefined) error
 	UpsertDeliveryRefined(ctx context.Context, delivery *DeliveryRefined) error
+	GetKPIs(ctx context.Context) (*KPIResponse, error)
 }
 
 // PipelineService defines the batch event processing use case abstraction for the domain

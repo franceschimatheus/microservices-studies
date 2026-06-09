@@ -9,6 +9,7 @@ COPY apps/restaurant-service/ ./apps/restaurant-service/
 COPY apps/cart-service/ ./apps/cart-service/
 COPY apps/order-service/ ./apps/order-service/
 COPY apps/search-service/ ./apps/search-service/
+COPY apps/analytics-service/ ./apps/analytics-service/
 COPY apps/gateway/ ./apps/gateway/
 COPY infra/logger/ ./infra/logger/
 COPY infra/observability/ ./infra/observability/

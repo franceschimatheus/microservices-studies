@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package analytics;
+
+option go_package = "analytics-service/pb;analyticspb";
+
+service AnalyticsService {
+  rpc GetKPIs(GetKPIsRequest) returns (GetKPIsResponse);
+}
+
+message GetKPIsRequest {}
+
+message GetKPIsResponse {
+  int64 total_orders = 1;
+  double total_revenue = 2;
+  int64 total_delivered_orders = 3;
+  int64 total_cancelled_orders = 4;
+  double payment_success_rate = 5;
+  double avg_delivery_seconds = 6;
+}

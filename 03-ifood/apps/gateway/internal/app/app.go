@@ -19,6 +19,7 @@ import (
 	"prometheus"
 
 
+	analyticspb "analytics-service/pb"
 	authpb "auth-service/pb"
 	cartpb "cart-service/pb"
 	orderpb "order-service/pb"
@@ -36,6 +37,7 @@ type App struct {
 	cartConn       *grpc.ClientConn
 	orderConn      *grpc.ClientConn
 	searchConn     *grpc.ClientConn
+	analyticsConn  *grpc.ClientConn
 	redisClient    *redis.Client
 	otelShutdown   func(context.Context) error
 }
@@ -132,6 +134,23 @@ func New(cfg *config.Config) (*App, error) {
 	searchClient := searchpb.NewSearchServiceClient(searchConn)
 	searchHandler := handler.NewSearchHandler(searchClient)
 
+	// Connect to Analytics Service via gRPC with OTel client instrumentation
+	analyticsConn, err := grpc.NewClient(cfg.AnalyticsServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		observability.GRPCClientStatsHandler(),
+	)
+	if err != nil {
+		conn.Close()
+		restaurantConn.Close()
+		cartConn.Close()
+		orderConn.Close()
+		searchConn.Close()
+		return nil, fmt.Errorf("failed to connect to Analytics Service: %w", err)
+	}
+
+	analyticsClient := analyticspb.NewAnalyticsServiceClient(analyticsConn)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsClient, authClient)
+
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
@@ -199,6 +218,7 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Get("/orders/:id", orderHandler.GetOrder)
 	fiberApp.Put("/orders/:id/status", orderHandler.UpdateOrderStatus)
 	fiberApp.Get("/search", searchHandler.Search)
+	fiberApp.Get("/admin/kpis", analyticsHandler.GetKPIs)
 
 	return &App{
 		cfg:            cfg,
@@ -208,6 +228,7 @@ func New(cfg *config.Config) (*App, error) {
 		cartConn:       cartConn,
 		orderConn:      orderConn,
 		searchConn:     searchConn,
+		analyticsConn:  analyticsConn,
 		redisClient:    redisClient,
 		otelShutdown:   otelShutdown,
 	}, nil
@@ -247,6 +268,11 @@ func (a *App) Close() {
 	if a.searchConn != nil {
 		if err := a.searchConn.Close(); err != nil {
 			slog.Error("Error closing Search Service gRPC connection", "error", err)
+		}
+	}
+	if a.analyticsConn != nil {
+		if err := a.analyticsConn.Close(); err != nil {
+			slog.Error("Error closing Analytics Service gRPC connection", "error", err)
 		}
 	}
 	if a.redisClient != nil {

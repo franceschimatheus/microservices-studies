@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,12 @@ import (
 
 	"analytics-service/internal/domain"
 )
+
+func uuidFromStr(s string) string {
+	h := md5.Sum([]byte(s))
+	return fmt.Sprintf("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+		h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15])
+}
 
 type PipelineServiceImpl struct {
 	repo domain.AnalyticsRepository
@@ -117,7 +124,7 @@ func (s *PipelineServiceImpl) processEvent(ctx context.Context, ev *domain.RawEv
 			return errors.New("missing order_id or user_id in payload")
 		}
 		payment := &domain.PaymentRefined{
-			PaymentID: fmt.Sprintf("failed-%s", p.OrderID), // Generate pseudo payment ID for failure logging
+			PaymentID: uuidFromStr("failed-" + p.OrderID), // Generate pseudo payment ID for failure logging
 			OrderID:   p.OrderID,
 			UserID:    p.UserID,
 			Status:    "FAILED",
@@ -173,7 +180,7 @@ func (s *PipelineServiceImpl) processEvent(ctx context.Context, ev *domain.RawEv
 		}
 		delivery := &domain.DeliveryRefined{
 			OrderID:   p.OrderID,
-			UserID:    "", // Will be merged on update
+			UserID:    "00000000-0000-0000-0000-000000000000", // Placeholder to satisfy NOT NULL, merged on conflict
 			Status:    p.Status,
 			CreatedAt: ev.CreatedAt,
 		}

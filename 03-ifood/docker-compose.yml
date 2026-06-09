@@ -243,6 +243,7 @@ services:
       - CART_SERVICE_ADDR=cart-service:50053
       - ORDER_SERVICE_ADDR=order-service:50054
       - SEARCH_SERVICE_ADDR=search-service:50056
+      - ANALYTICS_SERVICE_ADDR=analytics-service:50057
       - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - REDIS_ADDR=redis:6379
     depends_on:
@@ -251,6 +252,7 @@ services:
       - cart-service
       - order-service
       - search-service
+      - analytics-service
       - otel-collector
       - redis
     restart: unless-stopped

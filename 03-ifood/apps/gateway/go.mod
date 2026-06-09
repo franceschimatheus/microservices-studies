@@ -3,6 +3,7 @@ module gateway
 go 1.26.3
 
 require (
+	analytics-service v0.0.0-00010101000000-000000000000
 	auth-service v0.0.0-00010101000000-000000000000
 	cart-service v0.0.0-00010101000000-000000000000
 	github.com/gofiber/fiber/v2 v2.52.4
@@ -58,6 +59,7 @@ require (
 )
 
 replace (
+	analytics-service => ../analytics-service
 	auth-service => ../auth-service
 	cart-service => ../cart-service
 	logger => ../../infra/logger

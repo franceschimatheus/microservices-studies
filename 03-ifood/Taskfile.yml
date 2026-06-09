@@ -14,6 +14,7 @@ tasks:
       - protoc --go_out=apps/cart-service --go_opt=module=cart-service --go-grpc_out=apps/cart-service --go-grpc_opt=module=cart-service apps/cart-service/pb/cart.proto
       - protoc --go_out=apps/order-service --go_opt=module=order-service --go-grpc_out=apps/order-service --go-grpc_opt=module=order-service apps/order-service/pb/order.proto
       - protoc --go_out=apps/search-service --go_opt=module=search-service --go-grpc_out=apps/search-service --go-grpc_opt=module=search-service apps/search-service/pb/search.proto
+      - protoc --go_out=apps/analytics-service --go_opt=module=analytics-service --go-grpc_out=apps/analytics-service --go-grpc_opt=module=analytics-service apps/analytics-service/pb/analytics.proto
 
   up:
     desc: Start all services and infra using docker-compose
