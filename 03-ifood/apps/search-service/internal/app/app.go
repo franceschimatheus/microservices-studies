@@ -85,6 +85,10 @@ func New(cfg *config.Config) (*App, error) {
 	if err != nil {
 		slog.Error("Failed to subscribe to restaurant.updated", "error", err)
 	}
+	err = rabbitClient.Subscribe(ctx, "search.restaurant-deleted.queue", "restaurants.exchange", "restaurant.deleted", rabbitHandler.HandleRestaurantEvent)
+	if err != nil {
+		slog.Error("Failed to subscribe to restaurant.deleted", "error", err)
+	}
 	err = rabbitClient.Subscribe(ctx, "search.menu-updated.queue", "restaurants.exchange", "menu.updated", rabbitHandler.HandleMenuEvent)
 	if err != nil {
 		slog.Error("Failed to subscribe to menu.updated", "error", err)
