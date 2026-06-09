@@ -8,6 +8,7 @@ use (
 	./apps/notification-service
 	./apps/order-service
 	./apps/payment-service
+	./apps/analytics-service
 	./apps/restaurant-service
 	./apps/search-service
 	./infra/logger

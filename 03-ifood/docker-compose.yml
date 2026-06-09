@@ -139,6 +139,20 @@ services:
       - postgres-payment-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  postgres-analytics:
+    image: postgres:16-alpine
+    container_name: postgres-analytics-ifood
+    environment:
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_password
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-analytics-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+
   order-service:
     build:
       context: .
@@ -337,6 +351,26 @@ services:
       - otel-collector
     restart: unless-stopped
 
+  analytics-service:
+    build:
+      context: .
+      dockerfile: apps/analytics-service/Dockerfile
+    container_name: analytics-service-ifood
+    ports:
+      - "127.0.0.1:50057:50057"
+    environment:
+      - PORT=50057
+      - BIND_ADDR=0.0.0.0:50057
+      - DB_DSN=postgres://analytics_user:analytics_password@postgres-analytics:5432/analytics_db?sslmode=disable
+      - OTEL_COLLECTOR_ADDR=otel-collector:4317
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - postgres-analytics
+      - otel-collector
+      - rabbitmq
+    restart: unless-stopped
+
+
 
   jaeger:
     image: jaegertracing/all-in-one:1.55
@@ -438,4 +472,5 @@ volumes:
   postgres-restaurant-data:
   postgres-order-data:
   postgres-payment-data:
+  postgres-analytics-data:
   opensearch-data:
