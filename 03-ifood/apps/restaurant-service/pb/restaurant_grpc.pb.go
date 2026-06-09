@@ -23,6 +23,7 @@ const (
 	RestaurantService_UpdateRestaurant_FullMethodName = "/restaurant.RestaurantService/UpdateRestaurant"
 	RestaurantService_GetRestaurant_FullMethodName    = "/restaurant.RestaurantService/GetRestaurant"
 	RestaurantService_ListRestaurants_FullMethodName  = "/restaurant.RestaurantService/ListRestaurants"
+	RestaurantService_DeleteRestaurant_FullMethodName = "/restaurant.RestaurantService/DeleteRestaurant"
 	RestaurantService_CreateCategory_FullMethodName   = "/restaurant.RestaurantService/CreateCategory"
 	RestaurantService_ListCategories_FullMethodName   = "/restaurant.RestaurantService/ListCategories"
 	RestaurantService_CreateMenuItem_FullMethodName   = "/restaurant.RestaurantService/CreateMenuItem"
@@ -39,6 +40,7 @@ type RestaurantServiceClient interface {
 	UpdateRestaurant(ctx context.Context, in *UpdateRestaurantRequest, opts ...grpc.CallOption) (*RestaurantResponse, error)
 	GetRestaurant(ctx context.Context, in *GetRestaurantRequest, opts ...grpc.CallOption) (*RestaurantResponse, error)
 	ListRestaurants(ctx context.Context, in *ListRestaurantsRequest, opts ...grpc.CallOption) (*ListRestaurantsResponse, error)
+	DeleteRestaurant(ctx context.Context, in *DeleteRestaurantRequest, opts ...grpc.CallOption) (*DeleteRestaurantResponse, error)
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*CategoryResponse, error)
 	ListCategories(ctx context.Context, in *ListCategoriesRequest, opts ...grpc.CallOption) (*ListCategoriesResponse, error)
 	CreateMenuItem(ctx context.Context, in *CreateMenuItemRequest, opts ...grpc.CallOption) (*MenuItemResponse, error)
@@ -89,6 +91,16 @@ func (c *restaurantServiceClient) ListRestaurants(ctx context.Context, in *ListR
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListRestaurantsResponse)
 	err := c.cc.Invoke(ctx, RestaurantService_ListRestaurants_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *restaurantServiceClient) DeleteRestaurant(ctx context.Context, in *DeleteRestaurantRequest, opts ...grpc.CallOption) (*DeleteRestaurantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteRestaurantResponse)
+	err := c.cc.Invoke(ctx, RestaurantService_DeleteRestaurant_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +175,7 @@ type RestaurantServiceServer interface {
 	UpdateRestaurant(context.Context, *UpdateRestaurantRequest) (*RestaurantResponse, error)
 	GetRestaurant(context.Context, *GetRestaurantRequest) (*RestaurantResponse, error)
 	ListRestaurants(context.Context, *ListRestaurantsRequest) (*ListRestaurantsResponse, error)
+	DeleteRestaurant(context.Context, *DeleteRestaurantRequest) (*DeleteRestaurantResponse, error)
 	CreateCategory(context.Context, *CreateCategoryRequest) (*CategoryResponse, error)
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error)
 	CreateMenuItem(context.Context, *CreateMenuItemRequest) (*MenuItemResponse, error)
@@ -190,6 +203,9 @@ func (UnimplementedRestaurantServiceServer) GetRestaurant(context.Context, *GetR
 }
 func (UnimplementedRestaurantServiceServer) ListRestaurants(context.Context, *ListRestaurantsRequest) (*ListRestaurantsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListRestaurants not implemented")
+}
+func (UnimplementedRestaurantServiceServer) DeleteRestaurant(context.Context, *DeleteRestaurantRequest) (*DeleteRestaurantResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteRestaurant not implemented")
 }
 func (UnimplementedRestaurantServiceServer) CreateCategory(context.Context, *CreateCategoryRequest) (*CategoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateCategory not implemented")
@@ -298,6 +314,24 @@ func _RestaurantService_ListRestaurants_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RestaurantServiceServer).ListRestaurants(ctx, req.(*ListRestaurantsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RestaurantService_DeleteRestaurant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRestaurantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RestaurantServiceServer).DeleteRestaurant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RestaurantService_DeleteRestaurant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RestaurantServiceServer).DeleteRestaurant(ctx, req.(*DeleteRestaurantRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -432,6 +466,10 @@ var RestaurantService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRestaurants",
 			Handler:    _RestaurantService_ListRestaurants_Handler,
+		},
+		{
+			MethodName: "DeleteRestaurant",
+			Handler:    _RestaurantService_DeleteRestaurant_Handler,
 		},
 		{
 			MethodName: "CreateCategory",

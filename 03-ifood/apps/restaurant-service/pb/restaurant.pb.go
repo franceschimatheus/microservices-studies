@@ -953,6 +953,94 @@ func (x *GetMenuResponse) GetItems() []*MenuItemResponse {
 	return nil
 }
 
+type DeleteRestaurantRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteRestaurantRequest) Reset() {
+	*x = DeleteRestaurantRequest{}
+	mi := &file_apps_restaurant_service_pb_restaurant_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteRestaurantRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteRestaurantRequest) ProtoMessage() {}
+
+func (x *DeleteRestaurantRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_apps_restaurant_service_pb_restaurant_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteRestaurantRequest.ProtoReflect.Descriptor instead.
+func (*DeleteRestaurantRequest) Descriptor() ([]byte, []int) {
+	return file_apps_restaurant_service_pb_restaurant_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *DeleteRestaurantRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteRestaurantResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteRestaurantResponse) Reset() {
+	*x = DeleteRestaurantResponse{}
+	mi := &file_apps_restaurant_service_pb_restaurant_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteRestaurantResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteRestaurantResponse) ProtoMessage() {}
+
+func (x *DeleteRestaurantResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_apps_restaurant_service_pb_restaurant_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteRestaurantResponse.ProtoReflect.Descriptor instead.
+func (*DeleteRestaurantResponse) Descriptor() ([]byte, []int) {
+	return file_apps_restaurant_service_pb_restaurant_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeleteRestaurantResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_apps_restaurant_service_pb_restaurant_proto protoreflect.FileDescriptor
 
 const file_apps_restaurant_service_pb_restaurant_proto_rawDesc = "" +
@@ -1020,12 +1108,17 @@ const file_apps_restaurant_service_pb_restaurant_proto_rawDesc = "" +
 	"\x0eGetMenuRequest\x12#\n" +
 	"\rrestaurant_id\x18\x01 \x01(\tR\frestaurantId\"E\n" +
 	"\x0fGetMenuResponse\x122\n" +
-	"\x05items\x18\x01 \x03(\v2\x1c.restaurant.MenuItemResponseR\x05items2\xe3\x06\n" +
+	"\x05items\x18\x01 \x03(\v2\x1c.restaurant.MenuItemResponseR\x05items\")\n" +
+	"\x17DeleteRestaurantRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"4\n" +
+	"\x18DeleteRestaurantResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc2\a\n" +
 	"\x11RestaurantService\x12W\n" +
 	"\x10CreateRestaurant\x12#.restaurant.CreateRestaurantRequest\x1a\x1e.restaurant.RestaurantResponse\x12W\n" +
 	"\x10UpdateRestaurant\x12#.restaurant.UpdateRestaurantRequest\x1a\x1e.restaurant.RestaurantResponse\x12Q\n" +
 	"\rGetRestaurant\x12 .restaurant.GetRestaurantRequest\x1a\x1e.restaurant.RestaurantResponse\x12Z\n" +
-	"\x0fListRestaurants\x12\".restaurant.ListRestaurantsRequest\x1a#.restaurant.ListRestaurantsResponse\x12Q\n" +
+	"\x0fListRestaurants\x12\".restaurant.ListRestaurantsRequest\x1a#.restaurant.ListRestaurantsResponse\x12]\n" +
+	"\x10DeleteRestaurant\x12#.restaurant.DeleteRestaurantRequest\x1a$.restaurant.DeleteRestaurantResponse\x12Q\n" +
 	"\x0eCreateCategory\x12!.restaurant.CreateCategoryRequest\x1a\x1c.restaurant.CategoryResponse\x12W\n" +
 	"\x0eListCategories\x12!.restaurant.ListCategoriesRequest\x1a\".restaurant.ListCategoriesResponse\x12Q\n" +
 	"\x0eCreateMenuItem\x12!.restaurant.CreateMenuItemRequest\x1a\x1c.restaurant.MenuItemResponse\x12Q\n" +
@@ -1045,25 +1138,27 @@ func file_apps_restaurant_service_pb_restaurant_proto_rawDescGZIP() []byte {
 	return file_apps_restaurant_service_pb_restaurant_proto_rawDescData
 }
 
-var file_apps_restaurant_service_pb_restaurant_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_apps_restaurant_service_pb_restaurant_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_apps_restaurant_service_pb_restaurant_proto_goTypes = []any{
-	(*RestaurantResponse)(nil),      // 0: restaurant.RestaurantResponse
-	(*CreateRestaurantRequest)(nil), // 1: restaurant.CreateRestaurantRequest
-	(*UpdateRestaurantRequest)(nil), // 2: restaurant.UpdateRestaurantRequest
-	(*GetRestaurantRequest)(nil),    // 3: restaurant.GetRestaurantRequest
-	(*ListRestaurantsRequest)(nil),  // 4: restaurant.ListRestaurantsRequest
-	(*ListRestaurantsResponse)(nil), // 5: restaurant.ListRestaurantsResponse
-	(*CategoryResponse)(nil),        // 6: restaurant.CategoryResponse
-	(*CreateCategoryRequest)(nil),   // 7: restaurant.CreateCategoryRequest
-	(*ListCategoriesRequest)(nil),   // 8: restaurant.ListCategoriesRequest
-	(*ListCategoriesResponse)(nil),  // 9: restaurant.ListCategoriesResponse
-	(*MenuItemResponse)(nil),        // 10: restaurant.MenuItemResponse
-	(*CreateMenuItemRequest)(nil),   // 11: restaurant.CreateMenuItemRequest
-	(*UpdateMenuItemRequest)(nil),   // 12: restaurant.UpdateMenuItemRequest
-	(*DeleteMenuItemRequest)(nil),   // 13: restaurant.DeleteMenuItemRequest
-	(*DeleteMenuItemResponse)(nil),  // 14: restaurant.DeleteMenuItemResponse
-	(*GetMenuRequest)(nil),          // 15: restaurant.GetMenuRequest
-	(*GetMenuResponse)(nil),         // 16: restaurant.GetMenuResponse
+	(*RestaurantResponse)(nil),       // 0: restaurant.RestaurantResponse
+	(*CreateRestaurantRequest)(nil),  // 1: restaurant.CreateRestaurantRequest
+	(*UpdateRestaurantRequest)(nil),  // 2: restaurant.UpdateRestaurantRequest
+	(*GetRestaurantRequest)(nil),     // 3: restaurant.GetRestaurantRequest
+	(*ListRestaurantsRequest)(nil),   // 4: restaurant.ListRestaurantsRequest
+	(*ListRestaurantsResponse)(nil),  // 5: restaurant.ListRestaurantsResponse
+	(*CategoryResponse)(nil),         // 6: restaurant.CategoryResponse
+	(*CreateCategoryRequest)(nil),    // 7: restaurant.CreateCategoryRequest
+	(*ListCategoriesRequest)(nil),    // 8: restaurant.ListCategoriesRequest
+	(*ListCategoriesResponse)(nil),   // 9: restaurant.ListCategoriesResponse
+	(*MenuItemResponse)(nil),         // 10: restaurant.MenuItemResponse
+	(*CreateMenuItemRequest)(nil),    // 11: restaurant.CreateMenuItemRequest
+	(*UpdateMenuItemRequest)(nil),    // 12: restaurant.UpdateMenuItemRequest
+	(*DeleteMenuItemRequest)(nil),    // 13: restaurant.DeleteMenuItemRequest
+	(*DeleteMenuItemResponse)(nil),   // 14: restaurant.DeleteMenuItemResponse
+	(*GetMenuRequest)(nil),           // 15: restaurant.GetMenuRequest
+	(*GetMenuResponse)(nil),          // 16: restaurant.GetMenuResponse
+	(*DeleteRestaurantRequest)(nil),  // 17: restaurant.DeleteRestaurantRequest
+	(*DeleteRestaurantResponse)(nil), // 18: restaurant.DeleteRestaurantResponse
 }
 var file_apps_restaurant_service_pb_restaurant_proto_depIdxs = []int32{
 	0,  // 0: restaurant.ListRestaurantsResponse.restaurants:type_name -> restaurant.RestaurantResponse
@@ -1073,24 +1168,26 @@ var file_apps_restaurant_service_pb_restaurant_proto_depIdxs = []int32{
 	2,  // 4: restaurant.RestaurantService.UpdateRestaurant:input_type -> restaurant.UpdateRestaurantRequest
 	3,  // 5: restaurant.RestaurantService.GetRestaurant:input_type -> restaurant.GetRestaurantRequest
 	4,  // 6: restaurant.RestaurantService.ListRestaurants:input_type -> restaurant.ListRestaurantsRequest
-	7,  // 7: restaurant.RestaurantService.CreateCategory:input_type -> restaurant.CreateCategoryRequest
-	8,  // 8: restaurant.RestaurantService.ListCategories:input_type -> restaurant.ListCategoriesRequest
-	11, // 9: restaurant.RestaurantService.CreateMenuItem:input_type -> restaurant.CreateMenuItemRequest
-	12, // 10: restaurant.RestaurantService.UpdateMenuItem:input_type -> restaurant.UpdateMenuItemRequest
-	13, // 11: restaurant.RestaurantService.DeleteMenuItem:input_type -> restaurant.DeleteMenuItemRequest
-	15, // 12: restaurant.RestaurantService.GetMenu:input_type -> restaurant.GetMenuRequest
-	0,  // 13: restaurant.RestaurantService.CreateRestaurant:output_type -> restaurant.RestaurantResponse
-	0,  // 14: restaurant.RestaurantService.UpdateRestaurant:output_type -> restaurant.RestaurantResponse
-	0,  // 15: restaurant.RestaurantService.GetRestaurant:output_type -> restaurant.RestaurantResponse
-	5,  // 16: restaurant.RestaurantService.ListRestaurants:output_type -> restaurant.ListRestaurantsResponse
-	6,  // 17: restaurant.RestaurantService.CreateCategory:output_type -> restaurant.CategoryResponse
-	9,  // 18: restaurant.RestaurantService.ListCategories:output_type -> restaurant.ListCategoriesResponse
-	10, // 19: restaurant.RestaurantService.CreateMenuItem:output_type -> restaurant.MenuItemResponse
-	10, // 20: restaurant.RestaurantService.UpdateMenuItem:output_type -> restaurant.MenuItemResponse
-	14, // 21: restaurant.RestaurantService.DeleteMenuItem:output_type -> restaurant.DeleteMenuItemResponse
-	16, // 22: restaurant.RestaurantService.GetMenu:output_type -> restaurant.GetMenuResponse
-	13, // [13:23] is the sub-list for method output_type
-	3,  // [3:13] is the sub-list for method input_type
+	17, // 7: restaurant.RestaurantService.DeleteRestaurant:input_type -> restaurant.DeleteRestaurantRequest
+	7,  // 8: restaurant.RestaurantService.CreateCategory:input_type -> restaurant.CreateCategoryRequest
+	8,  // 9: restaurant.RestaurantService.ListCategories:input_type -> restaurant.ListCategoriesRequest
+	11, // 10: restaurant.RestaurantService.CreateMenuItem:input_type -> restaurant.CreateMenuItemRequest
+	12, // 11: restaurant.RestaurantService.UpdateMenuItem:input_type -> restaurant.UpdateMenuItemRequest
+	13, // 12: restaurant.RestaurantService.DeleteMenuItem:input_type -> restaurant.DeleteMenuItemRequest
+	15, // 13: restaurant.RestaurantService.GetMenu:input_type -> restaurant.GetMenuRequest
+	0,  // 14: restaurant.RestaurantService.CreateRestaurant:output_type -> restaurant.RestaurantResponse
+	0,  // 15: restaurant.RestaurantService.UpdateRestaurant:output_type -> restaurant.RestaurantResponse
+	0,  // 16: restaurant.RestaurantService.GetRestaurant:output_type -> restaurant.RestaurantResponse
+	5,  // 17: restaurant.RestaurantService.ListRestaurants:output_type -> restaurant.ListRestaurantsResponse
+	18, // 18: restaurant.RestaurantService.DeleteRestaurant:output_type -> restaurant.DeleteRestaurantResponse
+	6,  // 19: restaurant.RestaurantService.CreateCategory:output_type -> restaurant.CategoryResponse
+	9,  // 20: restaurant.RestaurantService.ListCategories:output_type -> restaurant.ListCategoriesResponse
+	10, // 21: restaurant.RestaurantService.CreateMenuItem:output_type -> restaurant.MenuItemResponse
+	10, // 22: restaurant.RestaurantService.UpdateMenuItem:output_type -> restaurant.MenuItemResponse
+	14, // 23: restaurant.RestaurantService.DeleteMenuItem:output_type -> restaurant.DeleteMenuItemResponse
+	16, // 24: restaurant.RestaurantService.GetMenu:output_type -> restaurant.GetMenuResponse
+	14, // [14:25] is the sub-list for method output_type
+	3,  // [3:14] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -1107,7 +1204,7 @@ func file_apps_restaurant_service_pb_restaurant_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_apps_restaurant_service_pb_restaurant_proto_rawDesc), len(file_apps_restaurant_service_pb_restaurant_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

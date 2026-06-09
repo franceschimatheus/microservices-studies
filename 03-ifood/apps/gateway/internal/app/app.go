@@ -176,6 +176,17 @@ func New(cfg *config.Config) (*App, error) {
 
 	fiberApp.Get("/restaurants", restaurantHandler.ListRestaurants)
 	fiberApp.Post("/restaurants", restaurantHandler.CreateRestaurant)
+	fiberApp.Get("/restaurants/:id", restaurantHandler.GetRestaurant)
+	fiberApp.Put("/restaurants/:id", restaurantHandler.UpdateRestaurant)
+	fiberApp.Delete("/restaurants/:id", restaurantHandler.DeleteRestaurant)
+
+	fiberApp.Get("/restaurants/:restaurantId/categories", restaurantHandler.ListCategories)
+	fiberApp.Post("/restaurants/:restaurantId/categories", restaurantHandler.CreateCategory)
+
+	fiberApp.Get("/restaurants/:restaurantId/menu", restaurantHandler.GetMenu)
+	fiberApp.Post("/menu-items", restaurantHandler.CreateMenuItem)
+	fiberApp.Put("/menu-items/:id", restaurantHandler.UpdateMenuItem)
+	fiberApp.Delete("/menu-items/:id", restaurantHandler.DeleteMenuItem)
 
 	fiberApp.Get("/cart", cartHandler.GetCart)
 	fiberApp.Post("/cart/items", cartHandler.AddItem)

@@ -124,6 +124,27 @@ func (r *OpenSearchRepository) DeleteMenuItem(ctx context.Context, id string) er
 	return nil
 }
 
+func (r *OpenSearchRepository) DeleteRestaurant(ctx context.Context, id string) error {
+	req := opensearchapi.DeleteRequest{
+		Index:      "restaurants",
+		DocumentID: id,
+		Refresh:    "true",
+	}
+
+	res, err := req.Do(ctx, r.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() && res.StatusCode != 404 {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("failed to delete restaurant: %s", string(bodyBytes))
+	}
+
+	return nil
+}
+
 func (r *OpenSearchRepository) SearchRestaurants(ctx context.Context, query string) ([]*domain.RestaurantDocument, error) {
 	var queryJSON map[string]any
 	if query == "" {

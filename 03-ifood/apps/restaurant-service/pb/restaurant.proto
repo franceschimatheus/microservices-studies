@@ -9,6 +9,7 @@ service RestaurantService {
   rpc UpdateRestaurant (UpdateRestaurantRequest) returns (RestaurantResponse);
   rpc GetRestaurant (GetRestaurantRequest) returns (RestaurantResponse);
   rpc ListRestaurants (ListRestaurantsRequest) returns (ListRestaurantsResponse);
+  rpc DeleteRestaurant (DeleteRestaurantRequest) returns (DeleteRestaurantResponse);
 
   rpc CreateCategory (CreateCategoryRequest) returns (CategoryResponse);
   rpc ListCategories (ListCategoriesRequest) returns (ListCategoriesResponse);
@@ -107,4 +108,12 @@ message GetMenuRequest {
 
 message GetMenuResponse {
   repeated MenuItemResponse items = 1;
+}
+
+message DeleteRestaurantRequest {
+  string id = 1;
+}
+
+message DeleteRestaurantResponse {
+  bool success = 1;
 }

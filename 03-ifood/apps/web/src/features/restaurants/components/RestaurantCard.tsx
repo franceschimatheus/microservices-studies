@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { Store, MapPin, ArrowRight } from 'lucide-react';
-import { Restaurant } from '../hooks/useRestaurants';
+import { RestaurantType } from '../schemas';
 
 interface RestaurantCardProps {
-  restaurant: Restaurant;
+  restaurant: RestaurantType;
   onClick: () => void;
 }
 

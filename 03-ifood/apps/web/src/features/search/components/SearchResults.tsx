@@ -1,16 +1,16 @@
 import React from 'react';
 import { Store, Utensils } from 'lucide-react';
 import { RestaurantCard } from '@/features/restaurants/components/RestaurantCard';
-import { Restaurant } from '@/features/restaurants/hooks/useRestaurants';
+import { RestaurantType } from '@/features/restaurants/schemas';
 
 interface SearchResultsProps {
   searchResults: {
-    restaurants: Restaurant[];
+    restaurants: RestaurantType[];
     menu_items: any[];
   };
-  restaurants: Restaurant[];
-  onSelectRestaurant: (restaurant: Restaurant) => void;
-  onAddToCart: (item: { id: string; name: string; price: number }, restaurant: Restaurant) => Promise<void>;
+  restaurants: RestaurantType[];
+  onSelectRestaurant: (restaurant: RestaurantType) => void;
+  onAddToCart: (item: { id: string; name: string; price: number }, restaurant: RestaurantType) => Promise<void>;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({

@@ -42,6 +42,8 @@ func (s *RestaurantServiceImpl) publishRestaurantEvent(ctx context.Context, acti
 	routingKey := "restaurant.created"
 	if action == "update" {
 		routingKey = "restaurant.updated"
+	} else if action == "delete" {
+		routingKey = "restaurant.deleted"
 	}
 	err = s.rabbitClient.Publish(ctx, "restaurants.exchange", routingKey, payloadBytes)
 	if err != nil {
@@ -124,6 +126,19 @@ func (s *RestaurantServiceImpl) GetRestaurant(ctx context.Context, id string) (*
 
 func (s *RestaurantServiceImpl) ListRestaurants(ctx context.Context) ([]*domain.Restaurant, error) {
 	return s.repo.List(ctx)
+}
+
+func (s *RestaurantServiceImpl) DeleteRestaurant(ctx context.Context, id string) error {
+	rest, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	err = s.repo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	s.publishRestaurantEvent(ctx, "delete", rest)
+	return nil
 }
 
 func (s *RestaurantServiceImpl) CreateCategory(ctx context.Context, restaurantID, name string) (*domain.Category, error) {

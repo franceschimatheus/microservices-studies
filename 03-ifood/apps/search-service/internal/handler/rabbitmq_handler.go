@@ -33,6 +33,8 @@ func (h *RabbitMQHandler) HandleRestaurantEvent(ctx context.Context, body []byte
 	switch event.Action {
 	case "create", "update":
 		return h.searchService.IndexRestaurant(ctx, &event.Restaurant)
+	case "delete":
+		return h.searchService.DeleteRestaurant(ctx, event.Restaurant.ID)
 	default:
 		slog.WarnContext(ctx, "Unknown restaurant event action", "action", event.Action)
 		return nil

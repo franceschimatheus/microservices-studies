@@ -28,7 +28,7 @@ func (r *PostgresRestaurantRepository) Create(ctx context.Context, rest *domain.
 }
 
 func (r *PostgresRestaurantRepository) Update(ctx context.Context, rest *domain.Restaurant) error {
-	query := `UPDATE restaurants SET name = $1, description = $2, address = $3 WHERE id = $4`
+	query := `UPDATE restaurants SET name = $1, description = $2, address = $3 WHERE id = $4 AND deleted = FALSE`
 	cmd, err := r.db.Exec(ctx, query, rest.Name, rest.Description, rest.Address, rest.ID)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (r *PostgresRestaurantRepository) Update(ctx context.Context, rest *domain.
 }
 
 func (r *PostgresRestaurantRepository) GetByID(ctx context.Context, id string) (*domain.Restaurant, error) {
-	query := `SELECT id, name, description, address, created_at FROM restaurants WHERE id = $1`
+	query := `SELECT id, name, description, address, created_at FROM restaurants WHERE id = $1 AND deleted = FALSE`
 	rest := &domain.Restaurant{}
 	err := r.db.QueryRow(ctx, query, id).Scan(&rest.ID, &rest.Name, &rest.Description, &rest.Address, &rest.CreatedAt)
 	if err != nil {
@@ -53,7 +53,7 @@ func (r *PostgresRestaurantRepository) GetByID(ctx context.Context, id string) (
 }
 
 func (r *PostgresRestaurantRepository) List(ctx context.Context) ([]*domain.Restaurant, error) {
-	query := `SELECT id, name, description, address, created_at FROM restaurants ORDER BY name`
+	query := `SELECT id, name, description, address, created_at FROM restaurants WHERE deleted = FALSE ORDER BY name`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -70,6 +70,18 @@ func (r *PostgresRestaurantRepository) List(ctx context.Context) ([]*domain.Rest
 		restaurants = append(restaurants, rest)
 	}
 	return restaurants, nil
+}
+
+func (r *PostgresRestaurantRepository) Delete(ctx context.Context, id string) error {
+	query := `UPDATE restaurants SET deleted = TRUE WHERE id = $1`
+	cmd, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return domain.ErrRestaurantNotFound
+	}
+	return nil
 }
 
 func (r *PostgresRestaurantRepository) CreateCategory(ctx context.Context, cat *domain.Category) error {
@@ -165,7 +177,8 @@ func (r *PostgresRestaurantRepository) GetMenu(ctx context.Context, restaurantID
 		SELECT mi.id, mi.category_id, mi.name, mi.description, mi.price, mi.available, mi.created_at 
 		FROM menu_items mi
 		JOIN categories c ON mi.category_id = c.id
-		WHERE c.restaurant_id = $1
+		JOIN restaurants res ON c.restaurant_id = res.id
+		WHERE c.restaurant_id = $1 AND res.deleted = FALSE
 		ORDER BY c.name, mi.name`
 	rows, err := r.db.Query(ctx, query, restaurantID)
 	if err != nil {

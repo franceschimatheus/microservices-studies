@@ -21,6 +21,7 @@ type MenuItemDocument struct {
 
 type SearchRepository interface {
 	IndexRestaurant(ctx context.Context, doc *RestaurantDocument) error
+	DeleteRestaurant(ctx context.Context, id string) error
 	IndexMenuItem(ctx context.Context, doc *MenuItemDocument) error
 	DeleteMenuItem(ctx context.Context, id string) error
 	SearchRestaurants(ctx context.Context, query string) ([]*RestaurantDocument, error)

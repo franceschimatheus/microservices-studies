@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Navbar } from '@/features/auth/components/Navbar';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
@@ -63,8 +64,26 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Restaurant & Menu Management Link Card */}
+          <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/60 flex flex-col justify-between shadow-lg">
+            <div>
+              <div className="text-3xl mb-3">🍔</div>
+              <h3 className="text-xl font-bold mb-2 text-indigo-300">Restaurant & Menu Control</h3>
+              <p className="text-slate-300 text-xs mb-6 leading-relaxed">
+                Add and edit restaurants, define categories, and control menus/items with full availability toggling.
+              </p>
+            </div>
+            <Link 
+              href="/admin/restaurants" 
+              className="inline-block bg-indigo-600 border border-indigo-650 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-700 hover:border-indigo-700 transition-all text-center self-start"
+            >
+              Control Restaurants & Menus 🛠️
+            </Link>
+          </div>
+
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">📊</div>
               <h3 className="text-lg font-bold mb-2">Service Metrics (Grafana)</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Monitor active microservice nodes, trace latency distributions, and view memory allocation rates.
@@ -74,14 +93,15 @@ export default function AdminDashboard() {
               href="http://localhost:3001" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-indigo-600 border border-indigo-600 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-700 hover:border-indigo-700 transition-all text-center self-start"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center self-start"
             >
-              Open Grafana 📊
+              Open Grafana
             </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">🕸️</div>
               <h3 className="text-lg font-bold mb-2">Distributed Tracing (Jaeger)</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Trace transaction flows and request propagation paths across microservice boundaries.
@@ -91,14 +111,15 @@ export default function AdminDashboard() {
               href="http://localhost:16686" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center self-start"
             >
-              Open Jaeger 🕸️
+              Open Jaeger
             </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">🐇</div>
               <h3 className="text-lg font-bold mb-2">Message Broker (RabbitMQ)</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Inspect message exchanges, queue depths, subscriber bindings, and track event throughput.
@@ -108,14 +129,15 @@ export default function AdminDashboard() {
               href="http://localhost:15672" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center self-start"
             >
-              Open RabbitMQ 🐇
+              Open RabbitMQ
             </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">🔥</div>
               <h3 className="text-lg font-bold mb-2">Raw Metrics (Prometheus)</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Query Prometheus time-series metrics directly or inspect raw service endpoints.
@@ -126,7 +148,7 @@ export default function AdminDashboard() {
                 href="http://localhost:9090" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center"
               >
                 Prometheus
               </a>
@@ -134,7 +156,7 @@ export default function AdminDashboard() {
                 href="http://localhost:8085/metrics" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center"
+                className="bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center"
               >
                 Gateway Metrics
               </a>
@@ -143,6 +165,7 @@ export default function AdminDashboard() {
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">💾</div>
               <h3 className="text-lg font-bold mb-2">Cache Store (Redis View)</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Inspect key-value pairs, cache expirations, and trace session/cart data states.
@@ -152,14 +175,15 @@ export default function AdminDashboard() {
               href="http://localhost:5540" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center self-start"
             >
-              Open Redis Insight 💾
+              Open Redis Insight
             </a>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 hover:border-indigo-500/20 flex flex-col justify-between">
             <div>
+              <div className="text-3xl mb-3">🔍</div>
               <h3 className="text-lg font-bold mb-2">Search Projection DB</h3>
               <p className="text-slate-400 text-xs mb-6 leading-relaxed">
                 Browse indexed restaurants and menu items, query projections, and manage index settings.
@@ -169,9 +193,9 @@ export default function AdminDashboard() {
               href="http://localhost:5601" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-600 hover:border-indigo-600 transition-all text-center self-start"
+              className="inline-block bg-slate-850 border border-slate-800 text-white text-xs font-semibold py-2.5 px-5 rounded-lg hover:bg-indigo-650 hover:border-indigo-650 transition-all text-center self-start"
             >
-              Open OpenSearch Dashboards 🔍
+              Open OpenSearch Dashboards
             </a>
           </div>
         </div>

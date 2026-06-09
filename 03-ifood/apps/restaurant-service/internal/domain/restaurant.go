@@ -41,6 +41,7 @@ type RestaurantRepository interface {
 	Update(ctx context.Context, rest *Restaurant) error
 	GetByID(ctx context.Context, id string) (*Restaurant, error)
 	List(ctx context.Context) ([]*Restaurant, error)
+	Delete(ctx context.Context, id string) error
 
 	CreateCategory(ctx context.Context, cat *Category) error
 	ListCategories(ctx context.Context, restaurantID string) ([]*Category, error)
@@ -58,6 +59,7 @@ type RestaurantService interface {
 	UpdateRestaurant(ctx context.Context, id, name, description, address string) (*Restaurant, error)
 	GetRestaurant(ctx context.Context, id string) (*Restaurant, error)
 	ListRestaurants(ctx context.Context) ([]*Restaurant, error)
+	DeleteRestaurant(ctx context.Context, id string) error
 
 	CreateCategory(ctx context.Context, restaurantID, name string) (*Category, error)
 	ListCategories(ctx context.Context, restaurantID string) ([]*Category, error)

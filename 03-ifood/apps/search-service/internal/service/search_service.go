@@ -10,6 +10,7 @@ type SearchService interface {
 	SearchRestaurants(ctx context.Context, query string) ([]*domain.RestaurantDocument, error)
 	SearchMenus(ctx context.Context, query string) ([]*domain.MenuItemDocument, error)
 	IndexRestaurant(ctx context.Context, doc *domain.RestaurantDocument) error
+	DeleteRestaurant(ctx context.Context, id string) error
 	IndexMenuItem(ctx context.Context, doc *domain.MenuItemDocument) error
 	DeleteMenuItem(ctx context.Context, id string) error
 }
@@ -32,6 +33,10 @@ func (s *SearchServiceImpl) SearchMenus(ctx context.Context, query string) ([]*d
 
 func (s *SearchServiceImpl) IndexRestaurant(ctx context.Context, doc *domain.RestaurantDocument) error {
 	return s.repo.IndexRestaurant(ctx, doc)
+}
+
+func (s *SearchServiceImpl) DeleteRestaurant(ctx context.Context, id string) error {
+	return s.repo.DeleteRestaurant(ctx, id)
 }
 
 func (s *SearchServiceImpl) IndexMenuItem(ctx context.Context, doc *domain.MenuItemDocument) error {

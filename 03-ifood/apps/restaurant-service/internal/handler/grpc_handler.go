@@ -91,6 +91,18 @@ func (h *GrpcRestaurantHandler) ListRestaurants(ctx context.Context, req *pb.Lis
 	return &pb.ListRestaurantsResponse{Restaurants: pbRests}, nil
 }
 
+func (h *GrpcRestaurantHandler) DeleteRestaurant(ctx context.Context, req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
+	err := h.service.DeleteRestaurant(ctx, req.GetId())
+	if err != nil {
+		if errors.Is(err, domain.ErrRestaurantNotFound) {
+			return nil, status.Error(codes.NotFound, "restaurant not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to delete restaurant: %v", err)
+	}
+
+	return &pb.DeleteRestaurantResponse{Success: true}, nil
+}
+
 func (h *GrpcRestaurantHandler) CreateCategory(ctx context.Context, req *pb.CreateCategoryRequest) (*pb.CategoryResponse, error) {
 	cat, err := h.service.CreateCategory(ctx, req.GetRestaurantId(), req.GetName())
 	if err != nil {

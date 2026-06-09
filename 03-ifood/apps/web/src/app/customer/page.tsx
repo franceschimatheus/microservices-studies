@@ -12,7 +12,7 @@ import { MenuModal } from '@/features/restaurants/components/MenuModal';
 import { AddRestaurantModal } from '@/features/restaurants/components/AddRestaurantModal';
 import { CartDrawer } from '@/features/cart/components/CartDrawer';
 import { OrdersDrawer } from '@/features/orders/components/OrdersDrawer';
-import { Restaurant } from '@/features/restaurants/hooks/useRestaurants';
+import { RestaurantType } from '@/features/restaurants/schemas';
 import { Store, Plus, Utensils, ShoppingCart, Package } from 'lucide-react';
 import { SearchBar } from '@/features/search/components/SearchBar';
 import { SearchResults } from '@/features/search/components/SearchResults';
@@ -33,12 +33,12 @@ export default function CustomerDashboard() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantType | null>(null);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{
-    restaurants: Restaurant[];
+    restaurants: RestaurantType[];
     menu_items: any[];
   } | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -101,7 +101,7 @@ export default function CustomerDashboard() {
   };
 
   // Detect cross-restaurant conflict when adding items
-  const handleAddToCart = async (item: { id: string; name: string; price: number }, restaurant: Restaurant) => {
+  const handleAddToCart = async (item: { id: string; name: string; price: number }, restaurant: RestaurantType) => {
     const existingRestaurantId = cart?.restaurant_id;
     if (existingRestaurantId && existingRestaurantId !== restaurant.id && (cart?.items?.length ?? 0) > 0) {
       const confirmed = window.confirm(
