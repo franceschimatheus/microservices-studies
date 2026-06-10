@@ -62,8 +62,9 @@ export default function LoginPage() {
       } else {
         router.push('/customer');
       }
-    } catch (err: any) {
-      setSubmitError(err.message || 'Incorrect email or password');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Incorrect email or password';
+      setSubmitError(message);
     }
   };
 
@@ -83,13 +84,14 @@ export default function LoginPage() {
           } else {
             router.push('/customer');
           }
-        } catch (err) {
+        } catch {
           setIsLogin(true);
           setSubmitSuccess(null);
         }
       }, 1500);
-    } catch (err: any) {
-      setSubmitError(err.message || 'Failed to create account');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create account';
+      setSubmitError(message);
     }
   };
 
@@ -147,7 +149,7 @@ export default function LoginPage() {
               </form>
 
               <p className="text-center mt-6 text-sm text-slate-400">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={() => {

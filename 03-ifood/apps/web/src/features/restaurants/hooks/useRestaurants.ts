@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRestaurantsQuery } from '../queries/useRestaurantsQuery';
+import { useCreateRestaurantMutation } from '../queries/useCreateRestaurantMutation';
+import { useUpdateRestaurantMutation } from '../queries/useUpdateRestaurantMutation';
+import { useDeleteRestaurantMutation } from '../queries/useDeleteRestaurantMutation';
 import { z } from 'zod';
 import {
-  RestaurantType,
-  restaurantSchema,
   CategoryType,
   categorySchema,
   MenuItemType,
@@ -12,86 +14,30 @@ import {
 const GATEWAY_URL = 'http://localhost:8085';
 
 export function useRestaurants() {
-  const [restaurants, setRestaurants] = useState<RestaurantType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchRestaurants = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch(`${GATEWAY_URL}/restaurants`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch restaurants');
-      }
-      const data = await res.json();
-      const validatedData = z.array(restaurantSchema).parse(data || []);
-      setRestaurants(validatedData);
-    } catch (err: any) {
-      setError(err.message || 'Error loading restaurants');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Queries
+  const { data: restaurants = [], isLoading: loading, error } = useRestaurantsQuery();
+
+  // Mutations
+  const createMutation = useCreateRestaurantMutation();
+  const updateMutation = useUpdateRestaurantMutation();
+  const deleteMutation = useDeleteRestaurantMutation();
+
+  const fetchRestaurants = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+  };
 
   const createRestaurant = async (name: string, description: string, address: string) => {
-    try {
-      const res = await fetch(`${GATEWAY_URL}/restaurants`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, description, address }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to create restaurant');
-      }
-
-      await fetchRestaurants();
-    } catch (err: any) {
-      console.error(err);
-      throw err;
-    }
+    await createMutation.mutateAsync({ name, description, address });
   };
 
   const updateRestaurant = async (id: string, name: string, description: string, address: string) => {
-    try {
-      const res = await fetch(`${GATEWAY_URL}/restaurants/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, description, address }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to update restaurant');
-      }
-
-      await fetchRestaurants();
-    } catch (err: any) {
-      console.error(err);
-      throw err;
-    }
+    await updateMutation.mutateAsync({ id, data: { name, description, address } });
   };
 
   const deleteRestaurant = async (id: string): Promise<void> => {
-    try {
-      const res = await fetch(`${GATEWAY_URL}/restaurants/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to delete restaurant');
-      }
-
-      await fetchRestaurants();
-    } catch (err: any) {
-      console.error(err);
-      throw err;
-    }
+    await deleteMutation.mutateAsync(id);
   };
 
   const fetchCategories = async (restaurantId: string): Promise<CategoryType[]> => {
@@ -115,6 +61,7 @@ export function useRestaurants() {
       throw new Error('Failed to create category');
     }
     const data = await res.json();
+    queryClient.invalidateQueries({ queryKey: ['restaurants', restaurantId, 'categories'] });
     return categorySchema.parse(data);
   };
 
@@ -166,14 +113,10 @@ export function useRestaurants() {
     }
   };
 
-  useEffect(() => {
-    fetchRestaurants();
-  }, [fetchRestaurants]);
-
   return {
     restaurants,
     loading,
-    error,
+    error: error ? (error as Error).message : null,
     fetchRestaurants,
     createRestaurant,
     updateRestaurant,

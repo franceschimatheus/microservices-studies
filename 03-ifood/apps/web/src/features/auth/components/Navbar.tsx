@@ -17,12 +17,30 @@ export const Navbar: React.FC<NavbarProps> = ({ email, role, onLogout }) => {
 
   return (
     <header className="flex justify-between items-center px-10 py-5 bg-slate-950 border-b border-slate-900">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl font-black text-red-600 tracking-tighter">iFood</span>
-        {role && (
-          <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 px-2 py-0.5 rounded-lg text-xs font-semibold uppercase tracking-wider">
-            {role}
-          </span>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(role === 'admin' ? '/admin' : '/customer')}>
+          <span className="text-2xl font-black text-red-600 tracking-tighter">iFood</span>
+          {role && (
+            <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 px-2 py-0.5 rounded-lg text-xs font-semibold uppercase tracking-wider">
+              {role}
+            </span>
+          )}
+        </div>
+        {role === 'customer' && (
+          <nav className="flex gap-4 items-center">
+            <button
+              onClick={() => router.push('/customer')}
+              className="text-slate-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer"
+            >
+              Browse
+            </button>
+            <button
+              onClick={() => router.push('/customer/profile')}
+              className="text-slate-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer"
+            >
+              My Orders
+            </button>
+          </nav>
         )}
       </div>
       <div className="flex items-center gap-6">

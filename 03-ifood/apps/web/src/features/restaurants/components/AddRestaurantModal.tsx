@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { restaurantFormSchema, RestaurantFormType } from '@/features/restaurants/schemas';
 import { Store, X } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 interface AddRestaurantModalProps {
   isOpen: boolean;
@@ -10,28 +14,27 @@ interface AddRestaurantModalProps {
 }
 
 export function AddRestaurantModal({ isOpen, onClose, onSubmit }: AddRestaurantModalProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<RestaurantFormType>({
+    resolver: zodResolver(restaurantFormSchema),
+    defaultValues: { name: '', description: '', address: '' },
+  });
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !address) return;
-
+  const onFormSubmit = async (data: RestaurantFormType) => {
     try {
-      setSubmitting(true);
-      await onSubmit(name, description, address);
-      setName('');
-      setDescription('');
-      setAddress('');
+      await onSubmit(data.name, data.description || '', data.address);
+      reset();
       onClose();
-    } catch (err: any) {
-      alert(err.message || 'Error registering restaurant');
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error registering restaurant';
+      toast(message, 'error', 'Registration Failed');
     }
   };
 
@@ -56,40 +59,38 @@ export function AddRestaurantModal({ isOpen, onClose, onSubmit }: AddRestaurantM
           Register New Restaurant
         </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
           <div>
             <label className="block text-slate-400 text-sm font-semibold mb-2">Restaurant Name</label>
             <input
               type="text"
-              required
               placeholder="e.g., Bella Italia"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register('name')}
               className="w-full bg-slate-950 border border-slate-800 focus:border-red-500/50 rounded-xl px-4 py-3 text-white placeholder-slate-650 focus:outline-none transition-all"
             />
+            {errors.name && <span className="text-rose-500 text-xs font-medium mt-1 block">{errors.name.message}</span>}
           </div>
 
           <div>
             <label className="block text-slate-400 text-sm font-semibold mb-2">Description</label>
             <textarea
               placeholder="Delicious authentic pizzas and pasta..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              {...register('description')}
               className="w-full bg-slate-950 border border-slate-800 focus:border-red-500/50 rounded-xl px-4 py-3 text-white placeholder-slate-650 focus:outline-none transition-all resize-none"
             />
+            {errors.description && <span className="text-rose-500 text-xs font-medium mt-1 block">{errors.description.message}</span>}
           </div>
 
           <div>
             <label className="block text-slate-400 text-sm font-semibold mb-2">Address</label>
             <input
               type="text"
-              required
               placeholder="123 Main St, Foodtown"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              {...register('address')}
               className="w-full bg-slate-950 border border-slate-800 focus:border-red-500/50 rounded-xl px-4 py-3 text-white placeholder-slate-650 focus:outline-none transition-all"
             />
+            {errors.address && <span className="text-rose-500 text-xs font-medium mt-1 block">{errors.address.message}</span>}
           </div>
 
           <div className="flex gap-4 pt-4">
@@ -102,10 +103,10 @@ export function AddRestaurantModal({ isOpen, onClose, onSubmit }: AddRestaurantM
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={isSubmitting}
               className="flex-1 bg-red-650 hover:bg-red-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Registering...' : 'Register'}
+              {isSubmitting ? 'Registering...' : 'Register'}
             </button>
           </div>
         </form>

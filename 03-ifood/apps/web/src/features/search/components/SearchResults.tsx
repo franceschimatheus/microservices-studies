@@ -2,11 +2,12 @@ import React from 'react';
 import { Store, Utensils } from 'lucide-react';
 import { RestaurantCard } from '@/features/restaurants/components/RestaurantCard';
 import { RestaurantType } from '@/features/restaurants/schemas';
+import { SearchMenuItemType } from '../schemas/searchSchema';
 
 interface SearchResultsProps {
   searchResults: {
     restaurants: RestaurantType[];
-    menu_items: any[];
+    menu_items: SearchMenuItemType[];
   };
   restaurants: RestaurantType[];
   onSelectRestaurant: (restaurant: RestaurantType) => void;

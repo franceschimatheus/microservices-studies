@@ -34,17 +34,23 @@ export function useKPIs() {
       const data = await res.json();
       setKpis(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching KPIs');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred while fetching KPIs';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchKPIs();
+    const timeout = setTimeout(() => {
+      fetchKPIs();
+    }, 0);
     const interval = setInterval(fetchKPIs, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   return { kpis, loading, error, refetch: fetchKPIs };

@@ -27,22 +27,27 @@ export const menuItemSchema = z.object({
 });
 export type MenuItemType = z.infer<typeof menuItemSchema>;
 
-export const restaurantFormSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  address: z.string().min(5, 'Address must be at least 5 characters'),
-  description: z.string().optional(),
-});
+export const restaurantFormSchema = restaurantSchema
+  .omit({ id: true, created_at: true })
+  .extend({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    address: z.string().min(5, 'Address must be at least 5 characters'),
+    description: z.string().optional(),
+  });
 export type RestaurantFormType = z.infer<typeof restaurantFormSchema>;
 
-export const categoryFormSchema = z.object({
-  name: z.string().min(1, 'Category name is required'),
-});
+export const categoryFormSchema = categorySchema
+  .pick({ name: true })
+  .extend({
+    name: z.string().min(1, 'Category name is required'),
+  });
 export type CategoryFormType = z.infer<typeof categoryFormSchema>;
 
-export const menuItemFormSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().min(5, 'Description must be at least 5 characters'),
-  price: z.number().min(0.01, 'Price must be at least 0.01'),
-  available: z.boolean(),
-});
+export const menuItemFormSchema = menuItemSchema
+  .omit({ id: true, category_id: true })
+  .extend({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    description: z.string().min(5, 'Description must be at least 5 characters'),
+    price: z.number().min(0.01, 'Price must be at least 0.01'),
+  });
 export type MenuItemFormType = z.infer<typeof menuItemFormSchema>;

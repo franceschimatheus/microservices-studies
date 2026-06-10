@@ -733,3 +733,17 @@ Every microservice in this monorepo must adhere to the following architecture pr
    - `handler/`: Transport/API layer (e.g., REST controllers, gRPC handlers).
 2. **Environment Configuration**: Always parse environment variables in a dedicated config file/package (e.g., `internal/config`) rather than fetching them directly in `main.go`.
 3. **App Wrapper Component**: Build an `App` struct (e.g., in `internal/app`) to handle bootstrap, service wiring, dependencies, listeners, and graceful shutdown cleanly. Avoid putting extensive setup/wiring logic inside `main.go`.
+
+
+# TODOs
+
+1 - remove unecessary useStates on "web"
+2 - search restaurants not rendering correctly, "sushi" still shows both "Classic Burger Joint" and "Sakura Sushi Bar"
+3 - remove "Add Restaurant" from hero section of "web"
+4 - add the profile picture on the top right of the header, when the user is logged in that redirects to "/profile"
+5 - improve admin console layout
+6 - improve system architecture explaining the core knowledge of each service in "services topology"
+7 - verify if all the exchanges and queues are listed on "event choreography" section
+8 - "Data Lake (Bronze $\rightarrow$ Silver $\rightarrow$ Gold)" bad utf8
+9 - try to simulate failures of services and test the retry policies, DLQs and idempotency
+10 - try to create "real-time" log screen of what is happening on the distributed system

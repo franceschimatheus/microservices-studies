@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Navbar } from '@/features/auth/components/Navbar';
 import { useRestaurants } from '@/features/restaurants/hooks/useRestaurants';
 import { RestaurantType, CategoryType, MenuItemType } from '@/features/restaurants/schemas';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 import { RestaurantForm } from './components/RestaurantForm';
 import { CategoryForm } from './components/CategoryForm';
@@ -15,6 +17,7 @@ import { RestaurantFormType, MenuItemFormType } from '@/features/restaurants/sch
 export default function AdminRestaurantsPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const {
     restaurants,
     loading: resLoading,
@@ -43,6 +46,13 @@ export default function AdminRestaurantsPage() {
   // Keep track of which menu item is being edited
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItemType | null>(null);
 
+  // Confirm modal state for delete actions
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    type: 'restaurant' | 'menuItem';
+    id: string;
+    name: string;
+  } | null>(null);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
@@ -55,14 +65,7 @@ export default function AdminRestaurantsPage() {
     }
   }, [user, authLoading, router]);
 
-  // Load menu data when selected restaurant changes
-  useEffect(() => {
-    if (selectedRestaurant) {
-      loadMenuData(selectedRestaurant.id);
-    }
-  }, [selectedRestaurant]);
-
-  const loadMenuData = async (resId: string) => {
+  const loadMenuData = useCallback(async (resId: string) => {
     setLoadingMenu(true);
     try {
       const [cats, items] = await Promise.all([
@@ -76,7 +79,17 @@ export default function AdminRestaurantsPage() {
     } finally {
       setLoadingMenu(false);
     }
-  };
+  }, [fetchCategories, fetchMenu]);
+
+  // Load menu data when selected restaurant changes
+  useEffect(() => {
+    if (selectedRestaurant) {
+      const timer = setTimeout(() => {
+        loadMenuData(selectedRestaurant.id);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedRestaurant, loadMenuData]);
 
   // Submit Restaurant Form
   const onSubmitRestaurant = async (data: RestaurantFormType) => {
@@ -94,8 +107,8 @@ export default function AdminRestaurantsPage() {
         await createRestaurant(data.name, data.description || '', data.address);
         setIsAddingRestaurant(false);
       }
-    } catch (err) {
-      alert('Failed to save restaurant.');
+    } catch {
+      toast('Failed to save restaurant.', 'error', 'Error');
     }
   };
 
@@ -105,8 +118,8 @@ export default function AdminRestaurantsPage() {
     try {
       await createCategory(selectedRestaurant.id, data.name);
       loadMenuData(selectedRestaurant.id);
-    } catch (err) {
-      alert('Failed to create category.');
+    } catch {
+      toast('Failed to create category.', 'error', 'Error');
     }
   };
 
@@ -122,8 +135,8 @@ export default function AdminRestaurantsPage() {
         setShowAddMenuFormForCat(null);
       }
       loadMenuData(selectedRestaurant.id);
-    } catch (err) {
-      alert('Failed to save menu item.');
+    } catch {
+      toast('Failed to save menu item.', 'error', 'Error');
     }
   };
 
@@ -149,32 +162,41 @@ export default function AdminRestaurantsPage() {
     try {
       await updateMenuItem(item.id, item.name, item.description || '', item.price, !item.available);
       loadMenuData(selectedRestaurant.id);
-    } catch (err) {
-      alert('Failed to toggle availability.');
+    } catch {
+      toast('Failed to toggle availability.', 'error', 'Error');
     }
   };
 
-  const handleDeleteMenuItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this menu item?')) return;
-    try {
-      await deleteMenuItem(itemId);
-      if (selectedRestaurant) {
-        loadMenuData(selectedRestaurant.id);
-      }
-    } catch (err) {
-      alert('Failed to delete item.');
-    }
+  const handleDeleteMenuItem = (itemId: string, itemName: string) => {
+    setDeleteConfirm({ type: 'menuItem', id: itemId, name: itemName });
   };
 
-  const handleDeleteRestaurant = async (resId: string) => {
-    if (!confirm('Are you sure you want to delete this restaurant? This will remove it from lists.')) return;
+  const handleDeleteRestaurant = (resId: string, resName: string) => {
+    setDeleteConfirm({ type: 'restaurant', id: resId, name: resName });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return;
     try {
-      await deleteRestaurant(resId);
-      if (selectedRestaurant?.id === resId) {
-        setSelectedRestaurant(null);
+      if (deleteConfirm.type === 'menuItem') {
+        await deleteMenuItem(deleteConfirm.id);
+        if (selectedRestaurant) {
+          loadMenuData(selectedRestaurant.id);
+        }
+      } else {
+        await deleteRestaurant(deleteConfirm.id);
+        if (selectedRestaurant?.id === deleteConfirm.id) {
+          setSelectedRestaurant(null);
+        }
       }
-    } catch (err) {
-      alert('Failed to delete restaurant.');
+    } catch {
+      toast(
+        `Failed to delete ${deleteConfirm.type === 'menuItem' ? 'item' : 'restaurant'}.`,
+        'error',
+        'Delete Failed'
+      );
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -200,7 +222,7 @@ export default function AdminRestaurantsPage() {
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900 pb-6">
           <div>
-            <Link 
+            <Link
               href="/admin"
               className="text-indigo-400 hover:text-indigo-350 text-sm font-semibold flex items-center gap-1.5 cursor-pointer mb-2"
             >
@@ -209,7 +231,7 @@ export default function AdminRestaurantsPage() {
             <h1 className="text-3xl font-extrabold tracking-tight">Restaurant & Menu Control Center 🍔</h1>
             <p className="text-slate-400 text-sm mt-1">Add, update, and remove restaurants, structure menu categories, and manage individual items.</p>
           </div>
-          <button 
+          <button
             onClick={startAddRestaurant}
             className="bg-indigo-600 border border-indigo-650 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all shadow-md text-sm cursor-pointer whitespace-nowrap"
           >
@@ -223,7 +245,7 @@ export default function AdminRestaurantsPage() {
           <div className="flex flex-col gap-4">
             <h2 className="text-lg font-bold text-slate-300">All Locations ({restaurants.length})</h2>
             {resLoading && <div className="text-slate-400 py-4 text-center">Loading locations...</div>}
-            
+
             {!resLoading && restaurants.length === 0 && (
               <div className="text-slate-500 text-center py-12 border border-dashed border-slate-900/80 rounded-3xl bg-slate-900/10">
                 No restaurants found. Create one to begin.
@@ -234,14 +256,13 @@ export default function AdminRestaurantsPage() {
               {restaurants.map((res) => {
                 const isSelected = selectedRestaurant?.id === res.id;
                 return (
-                  <div 
-                    key={res.id} 
+                  <div
+                    key={res.id}
                     onClick={() => { setSelectedRestaurant(res); setIsEditingRestaurant(false); setIsAddingRestaurant(false); }}
-                    className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                      isSelected 
-                        ? 'bg-indigo-950/20 border-indigo-900/60 shadow-indigo-950/20' 
+                    className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${isSelected
+                        ? 'bg-indigo-950/20 border-indigo-900/60 shadow-indigo-950/20'
                         : 'bg-slate-900/40 border-slate-900/80 hover:border-slate-800 hover:bg-slate-900/60'
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex justify-between items-start mb-1.5">
@@ -255,7 +276,7 @@ export default function AdminRestaurantsPage() {
                           </button>
                           <span className="text-slate-750 text-xs">|</span>
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(res.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(res.id, res.name); }}
                             className="text-xs text-rose-500 hover:text-rose-455 cursor-pointer font-medium"
                           >
                             Delete
@@ -278,7 +299,7 @@ export default function AdminRestaurantsPage() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             {/* 1. Add / Edit Restaurant Form */}
             {isAddingRestaurant && (
-              <RestaurantForm 
+              <RestaurantForm
                 title="Register New Restaurant"
                 onSubmit={onSubmitRestaurant}
                 onCancel={() => setIsAddingRestaurant(false)}
@@ -286,7 +307,7 @@ export default function AdminRestaurantsPage() {
             )}
 
             {isEditingRestaurant && selectedRestaurant && (
-              <RestaurantForm 
+              <RestaurantForm
                 title={`Edit Restaurant: ${selectedRestaurant.name}`}
                 initialData={{
                   name: selectedRestaurant.name,
@@ -315,7 +336,7 @@ export default function AdminRestaurantsPage() {
 
                 {!loadingMenu && categories.length === 0 && (
                   <div className="text-slate-500 text-center py-20 border border-dashed border-slate-900/80 rounded-3xl bg-slate-900/10">
-                    No categories registered. Create a category to start building this restaurant's menu.
+                    No categories registered. Create a category to start building this restaurant&apos;s menu.
                   </div>
                 )}
 
@@ -328,7 +349,7 @@ export default function AdminRestaurantsPage() {
                         <div key={cat.id} className="bg-slate-900/30 border border-slate-900/80 rounded-3xl p-6 flex flex-col gap-4">
                           <div className="flex justify-between items-center border-b border-slate-900/40 pb-3">
                             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                              📁 {cat.name} 
+                              📁 {cat.name}
                               <span className="text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full">
                                 {itemsInCat.length} items
                               </span>
@@ -346,7 +367,7 @@ export default function AdminRestaurantsPage() {
 
                           {/* Add Item form */}
                           {showAddMenuFormForCat === cat.id && (
-                            <MenuItemForm 
+                            <MenuItemForm
                               title="New Item details"
                               submitLabel="Create Menu Item"
                               onSubmit={onSubmitMenuItem}
@@ -363,12 +384,12 @@ export default function AdminRestaurantsPage() {
                               {itemsInCat.map((item) => {
                                 const isEditing = editingMenuItem?.id === item.id;
                                 return (
-                                  <div 
-                                    key={item.id} 
+                                  <div
+                                    key={item.id}
                                     className={`bg-slate-950/60 border rounded-2xl p-5 flex flex-col justify-between transition-all ${isEditing ? 'border-indigo-900/60' : 'border-slate-900/80'}`}
                                   >
                                     {isEditing ? (
-                                      <MenuItemForm 
+                                      <MenuItemForm
                                         title="Edit Menu Item"
                                         submitLabel="Save Changes"
                                         initialData={{
@@ -397,26 +418,25 @@ export default function AdminRestaurantsPage() {
                                         <div className="flex justify-between items-center border-t border-slate-900/25 pt-3 mt-1">
                                           <button
                                             onClick={() => toggleItemAvailability(item)}
-                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition-all cursor-pointer ${
-                                              item.available 
-                                                ? 'bg-emerald-500/10 text-emerald-400 hover:bg-rose-500/10 hover:text-rose-400' 
+                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition-all cursor-pointer ${item.available
+                                                ? 'bg-emerald-500/10 text-emerald-400 hover:bg-rose-500/10 hover:text-rose-400'
                                                 : 'bg-rose-500/10 text-rose-400 hover:bg-emerald-500/10 hover:text-emerald-400'
-                                            }`}
+                                              }`}
                                             title="Click to toggle availability status"
                                           >
                                             {item.available ? '● Available' : '○ Unavailable'}
                                           </button>
 
                                           <div className="flex gap-2.5">
-                                            <button 
+                                            <button
                                               onClick={() => startEditMenuItem(item)}
                                               className="text-xs text-slate-400 hover:text-indigo-400 transition-all cursor-pointer"
                                             >
                                               Edit
                                             </button>
                                             <span className="text-slate-800">|</span>
-                                            <button 
-                                              onClick={() => handleDeleteMenuItem(item.id)}
+                                            <button
+                                              onClick={() => handleDeleteMenuItem(item.id, item.name)}
                                               className="text-xs text-rose-500 hover:text-rose-455 transition-all cursor-pointer"
                                             >
                                               Delete
@@ -447,6 +467,22 @@ export default function AdminRestaurantsPage() {
           </div>
         </div>
       </main>
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleConfirmDelete}
+        title={deleteConfirm?.type === 'restaurant' ? 'Delete Restaurant?' : 'Delete Menu Item?'}
+        message={
+          deleteConfirm?.type === 'restaurant'
+            ? `Are you sure you want to delete "${deleteConfirm.name}"? This will remove it from all listings.`
+            : `Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

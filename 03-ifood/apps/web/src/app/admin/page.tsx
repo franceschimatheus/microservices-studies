@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Navbar } from '@/features/auth/components/Navbar';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const [isResetting, setIsResetting] = React.useState(false);
+  const { toast } = useToast();
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -29,10 +33,7 @@ export default function AdminDashboard() {
   };
 
   const handleReset = async () => {
-    if (!window.confirm("WARNING: Are you absolutely sure you want to reset the system? This will clear all orders, carts, analytics events, open search indexes, and restore 2 default restaurants.")) {
-      return;
-    }
-
+    setShowResetConfirm(false);
     setIsResetting(true);
     try {
       const res = await fetch('http://localhost:8085/admin/reset-system', {
@@ -48,10 +49,10 @@ export default function AdminDashboard() {
         throw new Error(data.error || 'Failed to reset system');
       }
 
-      alert('System reset and seeded successfully! Logging out.');
-      logout();
-    } catch (err: any) {
-      alert(err.message || 'An error occurred during reset.');
+      toast('System reset and seeded successfully! Logging out.', 'success', 'System Reset');
+      setTimeout(() => logout(), 1500);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'An error occurred during reset.', 'error', 'Reset Failed');
     } finally {
       setIsResetting(false);
     }
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
               System Architecture 📖
             </Link>
             <button 
-              onClick={handleReset}
+              onClick={() => setShowResetConfirm(true)}
               disabled={isResetting}
               className="shrink-0 bg-transparent border border-red-900/60 hover:bg-red-500/10 text-red-400 disabled:opacity-50 text-sm font-bold py-3.5 px-6 rounded-2xl transition-all cursor-pointer shadow-lg"
             >
@@ -161,6 +162,19 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Reset System Confirm Modal */}
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleReset}
+        title="Reset Entire System?"
+        message="This will clear all orders, carts, analytics events, OpenSearch indexes, and restore 2 default restaurants. This action cannot be undone."
+        confirmLabel="Reset & Seed"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={isResetting}
+      />
     </div>
   );
 }

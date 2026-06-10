@@ -57,8 +57,46 @@ We are currently working on **Phase 6 — Search + Analytics**. The task is to s
 1. **Analytics Consumer**: Create an `analytics-service` that consumes all microservice events from RabbitMQ (e.g., `order.created`, `order.cancelled`, `payment.completed`, `payment.failed`, `delivery.completed`).
 2. **Database Schema**: Store event logs and metrics in `postgres-analytics`.
 3. **KPIs & Metrics**:
-   - Total Orders & Revenue
+- Total Orders & Revenue
    - Order Status distribution (delivered vs. cancelled)
    - Payment Success rate
    - Delivery latency/times
 4. **Dashboards**: Build operational dashboards/visualizations (Grafana or in the Next.js Admin panel).
+
+---
+
+## 5. Next.js Frontend Development Guidelines (`/apps/web`)
+
+To maintain clean architecture, strong typing, and visual usability on the Next.js frontend:
+
+### 1. Package Manager & Shell
+- Always use **`pnpm`** inside the Nix development environment (`nix develop --command pnpm <cmd>`). Do not use `npm` or `yarn`.
+
+### 2. Feature-based Folder Structure
+Code must be organized by domain inside `src/features/[feature-name]/`:
+- **`queries/`**: Dedicated subfolder containing TanStack Query custom query and mutation hooks.
+  - **Rule**: Create exactly **one file per query/mutation hook** to prevent bloated file compilation (e.g., `useCartQuery.ts`, `useAddToCartMutation.ts`).
+- **`schemas/`**: Zod verification schemas and TypeScript types.
+- **`components/`**: UI components specific to the feature.
+- **`store/`**: Zustand stores for client-only global state.
+
+### 3. Zod Schema Conventions & Validation
+- **Inheritance**: Form schemas must extend, pick, or omit from their sibling base domain schemas rather than duplicating properties manually.
+- **API Validation**: Always run Zod schema `.parse(...)` on API responses inside your query and mutation hooks to guarantee runtime type-safety before returning data.
+
+### 4. Mutation Parameter Separation
+- For mutations modifying existing resources (requiring an ID and a body payload), separate the parameters explicitly inside the payload object:
+  ```typescript
+  mutationFn: async ({ id, data }: { id: string; data: FormType }) => { ... }
+  ```
+
+### 5. Separation of State Managers
+- **Server State**: Managed exclusively via **TanStack Query** (`useQuery` and `useMutation`). Always incorporate cache invalidations and optimistic updates where responsive feedback is required (e.g., shopping cart actions).
+- **Client State**: Managed via **Zustand** stores for global UI variables (e.g., drawer toggles, active modes) or session states.
+
+### 6. Decoupled Customer Pages
+- Design the customer flow using clean page routing rather than bloated single-page dashboards:
+  - `/customer` (browse homepage, search bar, categories)
+  - `/customer/restaurants/[id]` (dedicated restaurant page organizing items by category)
+  - `/customer/profile` (profile settings and "My Orders" listing with real-time updates)
+

@@ -46,8 +46,9 @@ export function CartDrawer({
         setOrderPlaced(false);
         onClose();
       }, 2200);
-    } catch (err: any) {
-      setCheckoutError(err.message || 'Failed to place order. Please try again.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
+      setCheckoutError(message);
     } finally {
       setCheckingOut(false);
     }
