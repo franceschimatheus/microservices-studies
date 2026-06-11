@@ -3,15 +3,13 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRestaurantsQuery } from '@/features/restaurants/queries/useRestaurantsQuery';
-import { useCreateRestaurantMutation } from '@/features/restaurants/queries/useCreateRestaurantMutation';
 import { useCartQuery } from '@/features/cart/queries/useCartQuery';
 import { useAddToCartMutation } from '@/features/cart/queries/useAddToCartMutation';
 import { useClearCartMutation } from '@/features/cart/queries/useClearCartMutation';
 import { RestaurantCard } from '@/features/restaurants/components/RestaurantCard';
-import { AddRestaurantModal } from '@/features/restaurants/components/AddRestaurantModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { RestaurantType } from '@/features/restaurants/schemas';
-import { Store, Plus, Utensils } from 'lucide-react';
+import { Store, Utensils } from 'lucide-react';
 import { SearchBar } from '@/features/search/components/SearchBar';
 import { SearchResults } from '@/features/search/components/SearchResults';
 import { useSearchQuery } from '@/features/search/queries/useSearchQuery';
@@ -21,13 +19,9 @@ export default function CustomerDashboard() {
 
   // Queries & Mutations using TanStack Query
   const { data: restaurants = [], isLoading: restaurantsLoading, error: restaurantsError } = useRestaurantsQuery();
-  const { mutateAsync: createRestaurant } = useCreateRestaurantMutation();
   const { data: cart } = useCartQuery();
   const { mutateAsync: addToCart } = useAddToCartMutation();
   const { mutateAsync: clearCart } = useClearCartMutation();
-
-  // Dialog state
-  const [isAddOpen, setIsAddOpen] = useState(false);
 
   // Cart change restaurant confirm modal state
   const [cartConfirm, setCartConfirm] = useState<{ restaurantName: string } | null>(null);
@@ -90,13 +84,6 @@ export default function CustomerDashboard() {
             Explore local restaurants, order meals, and track your delivery in real-time.
           </p>
         </div>
-        <button
-          onClick={() => setIsAddOpen(true)}
-          className="flex items-center gap-2 bg-red-650 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200 cursor-pointer shadow-lg hover:shadow-red-900/30"
-        >
-          <Plus className="w-5 h-5" />
-          Add Restaurant
-        </button>
       </div>
 
       {/* Search Bar */}
@@ -142,14 +129,8 @@ export default function CustomerDashboard() {
               <Store className="w-16 h-16 text-slate-700 mb-4" />
               <h3 className="text-xl font-bold mb-2">No restaurants available</h3>
               <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                Be the first to register a new restaurant in our platform to browse their menus.
+                We couldn&apos;t find any restaurants at the moment.
               </p>
-              <button
-                onClick={() => setIsAddOpen(true)}
-                className="bg-red-650 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-all cursor-pointer"
-              >
-                Register a Restaurant
-              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -165,15 +146,6 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* Add Restaurant Modal */}
-      <AddRestaurantModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onSubmit={async (name, description, address) => {
-          await createRestaurant({ name, description, address });
-          setIsAddOpen(false);
-        }}
-      />
 
       {/* Cart Change Restaurant Confirm Modal */}
       <ConfirmModal

@@ -2,11 +2,11 @@ import React from 'react';
 import { Store, Utensils } from 'lucide-react';
 import { RestaurantCard } from '@/features/restaurants/components/RestaurantCard';
 import { RestaurantType } from '@/features/restaurants/schemas';
-import { SearchMenuItemType } from '../schemas/searchSchema';
+import { SearchMenuItemType, SearchRestaurantType } from '../schemas/searchSchema';
 
 interface SearchResultsProps {
   searchResults: {
-    restaurants: RestaurantType[];
+    restaurants: SearchRestaurantType[];
     menu_items: SearchMenuItemType[];
   };
   restaurants: RestaurantType[];
@@ -37,8 +37,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             {(searchResults.restaurants || []).map((restaurant) => (
               <RestaurantCard
                 key={restaurant.id}
-                restaurant={restaurant}
-                onClick={() => onSelectRestaurant(restaurant)}
+                restaurant={restaurant as RestaurantType}
+                onClick={() => onSelectRestaurant(restaurant as RestaurantType)}
               />
             ))}
           </div>
@@ -57,14 +57,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(searchResults.menu_items || []).map((item) => {
-              const parentRest = restaurants.find((r) => r.id === item.restaurant_id) || {
-                id: item.restaurant_id,
-                name: 'Restaurant',
-                description: '',
-                address: '',
-                created_at: '',
-              };
+            {(searchResults.menu_items || [])
+              .filter((item) => restaurants.some((r) => r.id === item.restaurant_id))
+              .map((item) => {
+              const parentRest = restaurants.find((r) => r.id === item.restaurant_id)!;
               return (
                 <div
                   key={item.id}

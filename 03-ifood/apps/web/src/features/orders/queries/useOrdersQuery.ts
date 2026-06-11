@@ -1,21 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { Order, OrderListSchema } from '../schemas/orderSchema';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { OrderType } from '../schemas/orderSchema';
+import { orderClient } from '../api/orderClient';
 
 export function useOrdersQuery() {
-  return useQuery<Order[]>({
+  return useQuery<OrderType[]>({
     queryKey: ['orders'],
     queryFn: async () => {
-      const res = await fetch(`${GATEWAY_URL}/orders`, {
-        credentials: 'include',
-      });
-      if (res.status === 401) {
-        return [];
-      }
-      if (!res.ok) throw new Error('Failed to fetch orders');
-      const raw = await res.json();
-      return OrderListSchema.parse(Array.isArray(raw) ? raw : []);
+      return await orderClient.getOrders();
     },
+    refetchInterval: 5000,
   });
 }

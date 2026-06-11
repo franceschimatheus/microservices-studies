@@ -737,10 +737,10 @@ Every microservice in this monorepo must adhere to the following architecture pr
 
 # TODOs
 
-1 - remove unecessary useStates on "web"
-2 - search restaurants not rendering correctly, "sushi" still shows both "Classic Burger Joint" and "Sakura Sushi Bar"
-3 - remove "Add Restaurant" from hero section of "web"
-4 - add the profile picture on the top right of the header, when the user is logged in that redirects to "/profile"
+1 - [x] remove unecessary useStates on "web"
+2 - [x] search restaurants not rendering correctly, "sushi" still shows both "Classic Burger Joint" and "Sakura Sushi Bar"
+3 - [x] remove "Add Restaurant" from hero section of "web"
+4 - [x] add the profile picture on the top right of the header, when the user is logged in that redirects to "/profile"
 5 - improve admin console layout
 6 - improve system architecture explaining the core knowledge of each service in "services topology"
 7 - verify if all the exchanges and queues are listed on "event choreography" section

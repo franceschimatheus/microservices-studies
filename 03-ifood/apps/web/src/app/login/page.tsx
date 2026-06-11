@@ -9,8 +9,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   loginSchema,
   signupSchema,
-  LoginFormValues,
-  SignupFormValues,
+  LoginFormType,
+  SignupFormType,
 } from '@/features/auth/schemas/authSchema';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -38,7 +38,7 @@ export default function LoginPage() {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
     formState: { errors: loginErrors },
-  } = useForm<LoginFormValues>({
+  } = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -46,14 +46,14 @@ export default function LoginPage() {
     register: registerSignup,
     handleSubmit: handleSignupSubmit,
     formState: { errors: signupErrors },
-  } = useForm<SignupFormValues>({
+  } = useForm<SignupFormType>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       role: 'customer',
     },
   });
 
-  const onLogin = async (data: LoginFormValues) => {
+  const onLogin = async (data: LoginFormType) => {
     setSubmitError(null);
     try {
       const loggedUser = await login(data.email, data.password);
@@ -68,7 +68,7 @@ export default function LoginPage() {
     }
   };
 
-  const onSignup = async (data: SignupFormValues) => {
+  const onSignup = async (data: SignupFormType) => {
     setSubmitError(null);
     setSubmitSuccess(null);
     try {

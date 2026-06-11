@@ -43,11 +43,26 @@ export const Navbar: React.FC<NavbarProps> = ({ email, role, onLogout }) => {
           </nav>
         )}
       </div>
-      <div className="flex items-center gap-6">
-        <span className="text-slate-400 text-sm font-medium">{email}</span>
+      <div className="flex items-center gap-4">
+        {email && (
+          <button
+            onClick={() => router.push('/customer/profile')}
+            className="flex items-center gap-3 hover:bg-slate-900 px-3 py-2 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800"
+            title="Go to Profile"
+          >
+            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-sm">
+              <img
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=transparent`}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-slate-300 text-sm font-semibold hidden sm:block">{email}</span>
+          </button>
+        )}
         <button
           onClick={handleSignout}
-          className="border border-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer"
+          className="border border-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer shadow-sm"
         >
           Sign Out
         </button>

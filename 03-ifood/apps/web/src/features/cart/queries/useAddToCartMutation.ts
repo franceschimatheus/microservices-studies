@@ -1,24 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cart, AddItemData } from '../schemas/cartSchema';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { CartType, AddItemType } from '../schemas/cartSchema';
+import { cartClient } from '../api/cartClient';
 
 export function useAddToCartMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (item: AddItemData) => {
-      const res = await fetch(`${GATEWAY_URL}/cart/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to add item to cart');
-      return res.json();
+    mutationFn: async (item: AddItemType) => {
+      return await cartClient.addItem(item);
     },
     onMutate: async (newItem) => {
       await queryClient.cancelQueries({ queryKey: ['cart'] });
-      const previousCart = queryClient.getQueryData<Cart>(['cart']);
+      const previousCart = queryClient.getQueryData<CartType>(['cart']);
 
       if (previousCart) {
         const existingItems = previousCart.items || [];
@@ -41,7 +33,7 @@ export function useAddToCartMutation() {
 
         const updatedTotalPrice = updatedItems.reduce((acc, curr) => acc + curr.price * curr.quantity, 0);
 
-        queryClient.setQueryData<Cart>(['cart'], {
+        queryClient.setQueryData<CartType>(['cart'], {
           ...previousCart,
           restaurant_id: newItem.restaurant_id,
           items: updatedItems,

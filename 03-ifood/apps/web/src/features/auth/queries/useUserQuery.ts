@@ -1,20 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { User } from '../store/useAuthStore';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { UserType } from '../schemas/authSchema';
+import { authClient } from '../api/authClient';
 
 export function useUserQuery() {
-  return useQuery<User | null>({
+  return useQuery<UserType | null>({
     queryKey: ['user'],
     queryFn: async () => {
-      const res = await fetch(`${GATEWAY_URL}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        return null;
-      }
-      return res.json();
+      return await authClient.me();
     },
     staleTime: 5 * 60 * 1000, // Keep user session cached for 5 minutes
   });

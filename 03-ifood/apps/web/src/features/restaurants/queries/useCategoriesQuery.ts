@@ -1,18 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { CategoryType, categorySchema } from '../schemas';
+import { CategoryType } from '../schemas';
+import { restaurantClient } from '../api/restaurantClient';
 
-const GATEWAY_URL = 'http://localhost:8085';
-
-export function useCategoriesQuery(restaurantId: string | null | undefined) {
+export function useCategoriesQuery(restaurantId: string | null) {
   return useQuery<CategoryType[]>({
-    queryKey: ['restaurants', restaurantId, 'categories'],
+    queryKey: ['categories', restaurantId],
     queryFn: async () => {
       if (!restaurantId) return [];
-      const res = await fetch(`${GATEWAY_URL}/restaurants/${restaurantId}/categories`);
-      if (!res.ok) throw new Error('Failed to fetch categories');
-      const data = await res.json();
-      return z.array(categorySchema).parse(data || []);
+      return await restaurantClient.getCategories(restaurantId);
     },
     enabled: !!restaurantId,
   });

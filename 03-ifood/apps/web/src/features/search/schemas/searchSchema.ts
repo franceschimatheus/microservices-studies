@@ -7,9 +7,13 @@ export const searchMenuItemSchema = menuItemSchema.extend({
 
 export type SearchMenuItemType = z.infer<typeof searchMenuItemSchema>;
 
+export const searchRestaurantSchema = restaurantSchema.omit({ created_at: true });
+
+export type SearchRestaurantType = z.infer<typeof searchRestaurantSchema>;
+
 export const searchResultsSchema = z.object({
-  restaurants: z.array(restaurantSchema),
+  restaurants: z.array(searchRestaurantSchema),
   menu_items: z.array(searchMenuItemSchema),
 });
 
-export type SearchResultsData = z.infer<typeof searchResultsSchema>;
+export type SearchResultsType = z.infer<typeof searchResultsSchema>;

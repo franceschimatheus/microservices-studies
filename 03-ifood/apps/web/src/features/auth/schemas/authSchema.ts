@@ -1,15 +1,18 @@
 import * as z from 'zod';
 
-export const loginSchema = z.object({
+export const userSchema = z.object({
+  user_id: z.string(),
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
-});
-
-export const signupSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
   role: z.enum(['customer', 'admin']),
 });
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
-export type SignupFormValues = z.infer<typeof signupSchema>;
+export const signupSchema = userSchema.omit({ user_id: true }).extend({
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+});
+
+export const loginSchema = signupSchema.omit({ role: true });
+
+export type LoginFormType = z.infer<typeof loginSchema>;
+export type SignupFormType = z.infer<typeof signupSchema>;
+export type UserType = z.infer<typeof userSchema>;
+

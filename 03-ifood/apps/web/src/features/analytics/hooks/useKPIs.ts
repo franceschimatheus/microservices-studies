@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 const GATEWAY_URL = 'http://localhost:8085';
 
@@ -12,12 +12,9 @@ export interface KPIType {
 }
 
 export function useKPIs() {
-  const [kpis, setKpis] = useState<KPIType | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchKPIs = async () => {
-    try {
+  const { data: kpis, isLoading: loading, error, refetch } = useQuery<KPIType, Error>({
+    queryKey: ['kpis'],
+    queryFn: async () => {
       const res = await fetch(`${GATEWAY_URL}/admin/kpis`, {
         headers: {
           'Accept': 'application/json',
@@ -31,27 +28,10 @@ export function useKPIs() {
         }
         throw new Error('Failed to fetch platform KPIs');
       }
-      const data = await res.json();
-      setKpis(data);
-      setError(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred while fetching KPIs';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.json();
+    },
+    refetchInterval: 10000,
+  });
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      fetchKPIs();
-    }, 0);
-    const interval = setInterval(fetchKPIs, 10000);
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    };
-  }, []);
-
-  return { kpis, loading, error, refetch: fetchKPIs };
+  return { kpis: kpis || null, loading, error: error?.message || null, refetch };
 }

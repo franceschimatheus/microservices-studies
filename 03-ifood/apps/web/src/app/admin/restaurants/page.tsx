@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Navbar } from '@/features/auth/components/Navbar';
 import { useRestaurants } from '@/features/restaurants/hooks/useRestaurants';
-import { RestaurantType, CategoryType, MenuItemType } from '@/features/restaurants/schemas';
+import { RestaurantType, MenuItemType } from '@/features/restaurants/schemas';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
@@ -13,6 +13,12 @@ import { RestaurantForm } from './components/RestaurantForm';
 import { CategoryForm } from './components/CategoryForm';
 import { MenuItemForm } from './components/MenuItemForm';
 import { RestaurantFormType, MenuItemFormType } from '@/features/restaurants/schemas';
+import { useCategoriesQuery } from '@/features/restaurants/queries/useCategoriesQuery';
+import { useMenuQuery } from '@/features/restaurants/queries/useMenuQuery';
+import { useCreateCategoryMutation } from '@/features/restaurants/queries/useCreateCategoryMutation';
+import { useCreateMenuItemMutation } from '@/features/restaurants/queries/useCreateMenuItemMutation';
+import { useUpdateMenuItemMutation } from '@/features/restaurants/queries/useUpdateMenuItemMutation';
+import { useDeleteMenuItemMutation } from '@/features/restaurants/queries/useDeleteMenuItemMutation';
 
 export default function AdminRestaurantsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -24,12 +30,6 @@ export default function AdminRestaurantsPage() {
     createRestaurant,
     updateRestaurant,
     deleteRestaurant,
-    fetchCategories,
-    createCategory,
-    fetchMenu,
-    createMenuItem,
-    updateMenuItem,
-    deleteMenuItem,
   } = useRestaurants();
 
   // Management State
@@ -37,9 +37,16 @@ export default function AdminRestaurantsPage() {
   const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
   const [isAddingRestaurant, setIsAddingRestaurant] = useState(false);
 
-  const [categories, setCategories] = useState<CategoryType[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
-  const [loadingMenu, setLoadingMenu] = useState(false);
+  const selectedRestaurantId = selectedRestaurant?.id || null;
+
+  // Server State via TanStack Query
+  const { data: categories = [] } = useCategoriesQuery(selectedRestaurantId);
+  const { data: menuItems = [], isLoading: loadingMenu } = useMenuQuery(selectedRestaurantId);
+
+  const { mutateAsync: createCategoryMutation } = useCreateCategoryMutation(selectedRestaurantId || '');
+  const { mutateAsync: createMenuItemMutation } = useCreateMenuItemMutation(selectedRestaurantId || '');
+  const { mutateAsync: updateMenuItemMutation } = useUpdateMenuItemMutation(selectedRestaurantId || '');
+  const { mutateAsync: deleteMenuItemMutation } = useDeleteMenuItemMutation(selectedRestaurantId || '');
 
   // Keep track of which category is showing the add item form
   const [showAddMenuFormForCat, setShowAddMenuFormForCat] = useState<string | null>(null);
@@ -65,31 +72,7 @@ export default function AdminRestaurantsPage() {
     }
   }, [user, authLoading, router]);
 
-  const loadMenuData = useCallback(async (resId: string) => {
-    setLoadingMenu(true);
-    try {
-      const [cats, items] = await Promise.all([
-        fetchCategories(resId),
-        fetchMenu(resId),
-      ]);
-      setCategories(cats);
-      setMenuItems(items);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMenu(false);
-    }
-  }, [fetchCategories, fetchMenu]);
 
-  // Load menu data when selected restaurant changes
-  useEffect(() => {
-    if (selectedRestaurant) {
-      const timer = setTimeout(() => {
-        loadMenuData(selectedRestaurant.id);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedRestaurant, loadMenuData]);
 
   // Submit Restaurant Form
   const onSubmitRestaurant = async (data: RestaurantFormType) => {
@@ -116,8 +99,7 @@ export default function AdminRestaurantsPage() {
   const onSubmitCategory = async (data: { name: string }) => {
     if (!selectedRestaurant) return;
     try {
-      await createCategory(selectedRestaurant.id, data.name);
-      loadMenuData(selectedRestaurant.id);
+      await createCategoryMutation(data);
     } catch {
       toast('Failed to create category.', 'error', 'Error');
     }
@@ -128,13 +110,12 @@ export default function AdminRestaurantsPage() {
     if (!selectedRestaurant) return;
     try {
       if (editingMenuItem) {
-        await updateMenuItem(editingMenuItem.id, data.name, data.description, data.price, data.available);
+        await updateMenuItemMutation({ id: editingMenuItem.id, data: { ...data, category_id: editingMenuItem.category_id } });
         setEditingMenuItem(null);
       } else if (showAddMenuFormForCat) {
-        await createMenuItem(showAddMenuFormForCat, data.name, data.description, data.price);
+        await createMenuItemMutation({ ...data, category_id: showAddMenuFormForCat });
         setShowAddMenuFormForCat(null);
       }
-      loadMenuData(selectedRestaurant.id);
     } catch {
       toast('Failed to save menu item.', 'error', 'Error');
     }
@@ -160,8 +141,7 @@ export default function AdminRestaurantsPage() {
   const toggleItemAvailability = async (item: MenuItemType) => {
     if (!selectedRestaurant) return;
     try {
-      await updateMenuItem(item.id, item.name, item.description || '', item.price, !item.available);
-      loadMenuData(selectedRestaurant.id);
+      await updateMenuItemMutation({ id: item.id, data: { name: item.name, description: item.description || '', price: item.price, available: !item.available, category_id: item.category_id } });
     } catch {
       toast('Failed to toggle availability.', 'error', 'Error');
     }
@@ -179,10 +159,7 @@ export default function AdminRestaurantsPage() {
     if (!deleteConfirm) return;
     try {
       if (deleteConfirm.type === 'menuItem') {
-        await deleteMenuItem(deleteConfirm.id);
-        if (selectedRestaurant) {
-          loadMenuData(selectedRestaurant.id);
-        }
+        await deleteMenuItemMutation(deleteConfirm.id);
       } else {
         await deleteRestaurant(deleteConfirm.id);
         if (selectedRestaurant?.id === deleteConfirm.id) {

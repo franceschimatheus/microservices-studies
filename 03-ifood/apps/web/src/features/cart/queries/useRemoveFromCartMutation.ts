@@ -1,29 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cart } from '../schemas/cartSchema';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { CartType } from '../schemas/cartSchema';
+import { cartClient } from '../api/cartClient';
 
 export function useRemoveFromCartMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (itemId: string) => {
-      const res = await fetch(`${GATEWAY_URL}/cart/items/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to remove item from cart');
-      return res.json();
+      return await cartClient.removeItem(itemId);
     },
     onMutate: async (itemId) => {
       await queryClient.cancelQueries({ queryKey: ['cart'] });
-      const previousCart = queryClient.getQueryData<Cart>(['cart']);
+      const previousCart = queryClient.getQueryData<CartType>(['cart']);
 
       if (previousCart) {
         const existingItems = previousCart.items || [];
         const updatedItems = existingItems.filter(i => i.menu_item_id !== itemId);
         const updatedTotalPrice = updatedItems.reduce((acc, curr) => acc + curr.price * curr.quantity, 0);
 
-        queryClient.setQueryData<Cart>(['cart'], {
+        queryClient.setQueryData<CartType>(['cart'], {
           ...previousCart,
           items: updatedItems,
           total_price: updatedTotalPrice,

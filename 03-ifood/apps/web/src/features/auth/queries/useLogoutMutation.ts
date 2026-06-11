@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/useAuthStore';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { authClient } from '../api/authClient';
 
 export function useLogoutMutation() {
   const queryClient = useQueryClient();
@@ -9,10 +8,7 @@ export function useLogoutMutation() {
 
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await fetch(`${GATEWAY_URL}/auth/signout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await authClient.logout();
     },
     onSuccess: () => {
       setUser(null);

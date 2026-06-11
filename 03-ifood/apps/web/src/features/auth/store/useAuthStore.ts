@@ -1,16 +1,11 @@
 import { create } from 'zustand';
 
-export interface User {
-  user_id: string;
-  email: string;
-  role: string;
-}
-
+import { UserType } from '../schemas/authSchema';
 interface AuthState {
-  user: User | null;
+  user: UserType | null;
   loading: boolean;
   error: string | null;
-  setUser: (user: User | null) => void;
+  setUser: (user: UserType | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchUser: () => Promise<void>;

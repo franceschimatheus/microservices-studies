@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState, useRef } from 'react';
+import React, { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRestaurantsQuery } from '@/features/restaurants/queries/useRestaurantsQuery';
 import { useCategoriesQuery } from '@/features/restaurants/queries/useCategoriesQuery';
@@ -32,22 +32,13 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
 
   // Cart change restaurant confirm modal state
   const [cartConfirm, setCartConfirm] = useState(false);
-  const pendingCartAction = useRef<(() => Promise<void>) | null>(null);
+  const [pendingItem, setPendingItem] = useState<{ id: string; name: string; price: number } | null>(null);
 
   const handleAddToCart = async (item: { id: string; name: string; price: number }) => {
     if (!restaurant) return;
     const existingRestaurantId = cart?.restaurant_id;
     if (existingRestaurantId && existingRestaurantId !== restaurant.id && (cart?.items?.length ?? 0) > 0) {
-      pendingCartAction.current = async () => {
-        await clearCart();
-        await addToCart({
-          menu_item_id: item.id,
-          restaurant_id: restaurant.id,
-          name: item.name,
-          price: item.price,
-          quantity: 1,
-        });
-      };
+      setPendingItem(item);
       setCartConfirm(true);
       return;
     }
@@ -61,15 +52,22 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
   };
 
   const handleCartConfirm = async () => {
-    if (pendingCartAction.current) {
-      await pendingCartAction.current();
-      pendingCartAction.current = null;
+    if (pendingItem && restaurant) {
+      await clearCart();
+      await addToCart({
+        menu_item_id: pendingItem.id,
+        restaurant_id: restaurant.id,
+        name: pendingItem.name,
+        price: pendingItem.price,
+        quantity: 1,
+      });
+      setPendingItem(null);
     }
     setCartConfirm(false);
   };
 
   const handleCartCancel = () => {
-    pendingCartAction.current = null;
+    setPendingItem(null);
     setCartConfirm(false);
   };
 

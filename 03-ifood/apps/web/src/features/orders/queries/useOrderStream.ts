@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Order } from '../schemas/orderSchema';
+import { OrderType } from '../schemas/orderSchema';
 import { useToast } from '@/components/ui/Toast';
 
 const GATEWAY_URL = 'http://localhost:8085';
@@ -39,7 +39,7 @@ export function useOrderStream() {
           
           toast(`Order #${payload.order_id.slice(0, 8)} status updated to ${payload.status}.`, type, 'Order Status');
           
-          queryClient.setQueryData<Order[]>(['orders'], (oldOrders = []) =>
+          queryClient.setQueryData<OrderType[]>(['orders'], (oldOrders = []) =>
             oldOrders.map((o) =>
               o.id === payload.order_id ? { ...o, status: payload.status } : o
             )

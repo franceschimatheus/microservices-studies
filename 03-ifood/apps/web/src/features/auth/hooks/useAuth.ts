@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { useAuthStore, User } from '../store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { UserType } from '../schemas/authSchema';
 import { useUserQuery } from '../queries/useUserQuery';
 import { useLoginMutation } from '../queries/useLoginMutation';
 import { useSignupMutation } from '../queries/useSignupMutation';
 import { useLogoutMutation } from '../queries/useLogoutMutation';
 
-export type { User };
+export type { UserType as User };
 
 export function useAuth() {
   const { user, setUser } = useAuthStore();
@@ -21,11 +22,11 @@ export function useAuth() {
     }
   }, [queryUser, setUser]);
 
-  const login = async (email: string, password: string): Promise<User> => {
+  const login = async (email: string, password: string): Promise<UserType> => {
     return loginMutation.mutateAsync({ email, password });
   };
 
-  const signup = async (email: string, password: string, role: string): Promise<void> => {
+  const signup = async (email: string, password: string, role: 'customer' | 'admin'): Promise<UserType> => {
     return signupMutation.mutateAsync({ email, password, role });
   };
 

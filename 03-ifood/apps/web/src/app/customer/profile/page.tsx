@@ -5,10 +5,10 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useOrdersQuery } from '@/features/orders/queries/useOrdersQuery';
 import { useRestaurantsQuery } from '@/features/restaurants/queries/useRestaurantsQuery';
 import { Package, Clock, ChefHat, CheckCircle2, XCircle, Truck, User as UserIcon, Calendar, DollarSign } from 'lucide-react';
-import { OrderStatus } from '@/features/orders/schemas/orderSchema';
+import { OrderStatusType } from '@/features/orders/schemas/orderSchema';
 import { Card } from '@/components/ui/Card';
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<OrderStatusType, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   PENDING:     { label: 'Pending',     color: 'text-amber-400',   bg: 'bg-amber-950/40 border-amber-800/40',   Icon: Clock },
   CONFIRMED:   { label: 'Confirmed',   color: 'text-blue-400',    bg: 'bg-blue-950/40 border-blue-800/40',     Icon: CheckCircle2 },
   PREPARING:   { label: 'Preparing',   color: 'text-orange-400',  bg: 'bg-orange-950/40 border-orange-800/40', Icon: ChefHat },
@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: str
   CANCELLED:   { label: 'Cancelled',   color: 'text-red-400',     bg: 'bg-red-950/40 border-red-800/40',       Icon: XCircle },
 };
 
-function StatusBadge({ status }: { status: OrderStatus }) {
+function StatusBadge({ status }: { status: OrderStatusType }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.PENDING;
   const { label, color, bg, Icon } = cfg;
   return (

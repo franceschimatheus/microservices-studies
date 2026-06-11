@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 import { ShoppingCart, X, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
-import { Cart } from '../schemas/cartSchema';
+import { CartType } from '../schemas/cartSchema';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  cart: Cart | null;
+  cart: CartType | null;
   loading: boolean;
   restaurantId: string | null;
-  onRemoveItem: (itemId: string) => Promise<void>;
+  onRemoveItem: (itemId: string) => Promise<CartType | void>;
   onClearCart: () => Promise<void>;
   onCheckout: (restaurantId: string) => Promise<void>;
 }

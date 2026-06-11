@@ -1,23 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cart } from '../schemas/cartSchema';
-
-const GATEWAY_URL = 'http://localhost:8085';
+import { CartType } from '../schemas/cartSchema';
+import { cartClient } from '../api/cartClient';
 
 export function useClearCartMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${GATEWAY_URL}/cart`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to clear cart');
+      await cartClient.clearCart();
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['cart'] });
-      const previousCart = queryClient.getQueryData<Cart>(['cart']);
+      const previousCart = queryClient.getQueryData<CartType>(['cart']);
 
-      queryClient.setQueryData<Cart | null>(['cart'], null);
+      queryClient.setQueryData<CartType | null>(['cart'], null);
 
       return { previousCart };
     },
