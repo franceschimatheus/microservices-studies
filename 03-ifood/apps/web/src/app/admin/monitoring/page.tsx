@@ -1,40 +1,11 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { Navbar } from '@/features/auth/components/Navbar';
+
 import Link from 'next/link';
 
 export default function AdminMonitoringPage() {
-  const { user, loading, logout } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (user.role === 'customer') {
-        router.push('/customer');
-      } else if (user.role === 'admin' && typeof window !== 'undefined' && localStorage.getItem('admin_view_mode') === 'customer') {
-        router.push('/customer');
-      }
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user || user.role !== 'admin') {
-    return (
-      <div className="flex h-screen bg-slate-950 items-center justify-center text-white">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span className="text-slate-400 font-medium text-sm">Validating session...</span>
-        </div>
-      </div>
-    );
-  }
 
   const monitoringTools = [
     {
@@ -94,10 +65,7 @@ export default function AdminMonitoringPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-white selection:bg-indigo-500/30">
-      <Navbar email={user.email} role={user.role} onLogout={logout} />
-
-      <main className="flex-1 p-6 md:p-10 max-w-7xl w-full mx-auto flex flex-col gap-8">
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">
         
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900 pb-6">
@@ -154,7 +122,6 @@ export default function AdminMonitoringPage() {
           ))}
         </div>
 
-      </main>
     </div>
   );
 }

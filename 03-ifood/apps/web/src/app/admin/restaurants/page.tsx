@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { Navbar } from '@/features/auth/components/Navbar';
+
 import { useRestaurants } from '@/features/restaurants/hooks/useRestaurants';
 import { RestaurantType, MenuItemType } from '@/features/restaurants/schemas';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -21,8 +19,6 @@ import { useUpdateMenuItemMutation } from '@/features/restaurants/queries/useUpd
 import { useDeleteMenuItemMutation } from '@/features/restaurants/queries/useDeleteMenuItemMutation';
 
 export default function AdminRestaurantsPage() {
-  const { user, loading: authLoading, logout } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
   const {
     restaurants,
@@ -59,18 +55,6 @@ export default function AdminRestaurantsPage() {
     id: string;
     name: string;
   } | null>(null);
-
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-      } else if (user.role === 'customer') {
-        router.push('/customer');
-      } else if (user.role === 'admin' && typeof window !== 'undefined' && localStorage.getItem('admin_view_mode') === 'customer') {
-        router.push('/customer');
-      }
-    }
-  }, [user, authLoading, router]);
 
 
 
@@ -177,35 +161,12 @@ export default function AdminRestaurantsPage() {
     }
   };
 
-  if (authLoading || !user || user.role !== 'admin') {
-    return (
-      <div className="flex h-screen bg-slate-950 items-center justify-center text-white">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span className="text-slate-400 font-medium text-sm">Validating session...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-white">
-      <Navbar email={user.email} role={user.role} onLogout={logout} />
-
-      <main className="flex-1 p-6 md:p-10 max-w-7xl w-full mx-auto flex flex-col gap-8">
-        {/* Navigation & Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900 pb-6">
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">
+      {/* Navigation & Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900/80 pb-6">
           <div>
-            <Link
-              href="/admin"
-              className="text-indigo-400 hover:text-indigo-350 text-sm font-semibold flex items-center gap-1.5 cursor-pointer mb-2"
-            >
-              ← Back to Main Console
-            </Link>
-            <h1 className="text-3xl font-extrabold tracking-tight">Restaurant & Menu Control Center 🍔</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">Restaurant & Menu Control Center 🍔</h1>
             <p className="text-slate-400 text-sm mt-1">Add, update, and remove restaurants, structure menu categories, and manage individual items.</p>
           </div>
           <button
@@ -443,23 +404,22 @@ export default function AdminRestaurantsPage() {
             )}
           </div>
         </div>
-      </main>
 
-      {/* Delete Confirm Modal */}
-      <ConfirmModal
-        isOpen={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        onConfirm={handleConfirmDelete}
-        title={deleteConfirm?.type === 'restaurant' ? 'Delete Restaurant?' : 'Delete Menu Item?'}
-        message={
-          deleteConfirm?.type === 'restaurant'
-            ? `Are you sure you want to delete "${deleteConfirm.name}"? This will remove it from all listings.`
-            : `Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`
-        }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        variant="danger"
-      />
+        {/* Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleConfirmDelete}
+          title={deleteConfirm?.type === 'restaurant' ? 'Delete Restaurant?' : 'Delete Menu Item?'}
+          message={
+            deleteConfirm?.type === 'restaurant'
+              ? `Are you sure you want to delete "${deleteConfirm?.name}"? This will remove it from all listings.`
+              : `Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`
+          }
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
+        />
     </div>
   );
 }
