@@ -1,45 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isResetting, setIsResetting] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const switchToCustomerView = () => {
     localStorage.setItem('admin_view_mode', 'customer');
     router.push('/customer');
-  };
-
-  const handleReset = async () => {
-    setShowResetConfirm(false);
-    setIsResetting(true);
-    try {
-      const res = await fetch('http://localhost:8085/admin/reset-system', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to reset system');
-      }
-
-      toast('System reset and seeded successfully!', 'success', 'System Reset');
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'An error occurred during reset.', 'error', 'Reset Failed');
-    } finally {
-      setIsResetting(false);
-    }
   };
 
   return (
@@ -57,13 +29,6 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10 w-full lg:w-auto">
-          <button 
-            onClick={() => setShowResetConfirm(true)}
-            disabled={isResetting}
-            className="shrink-0 bg-slate-950/50 border border-red-900/60 hover:bg-red-500/10 text-red-400 disabled:opacity-50 text-sm font-bold py-3.5 px-6 rounded-2xl transition-all cursor-pointer shadow-lg w-full sm:w-auto text-center"
-          >
-            {isResetting ? 'Resetting System... 🔄' : 'Reset System & Seed ⚠️'}
-          </button>
           <button 
             onClick={switchToCustomerView}
             className="shrink-0 bg-gradient-to-r from-indigo-600 to-indigo-500 border border-indigo-500 text-white text-sm font-bold py-3.5 px-6 rounded-2xl hover:from-indigo-500 hover:to-indigo-400 hover:border-indigo-400 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all cursor-pointer shadow-lg w-full sm:w-auto text-center flex items-center justify-center gap-2"
@@ -127,18 +92,6 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Reset System Confirm Modal */}
-      <ConfirmModal
-        isOpen={showResetConfirm}
-        onClose={() => setShowResetConfirm(false)}
-        onConfirm={handleReset}
-        title="Reset Entire System?"
-        message="This will clear all orders, carts, analytics events, OpenSearch indexes, and restore 2 default restaurants. This action cannot be undone."
-        confirmLabel="Reset & Seed"
-        cancelLabel="Cancel"
-        variant="danger"
-        loading={isResetting}
-      />
     </div>
   );
 }

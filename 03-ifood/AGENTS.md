@@ -46,6 +46,7 @@ Every Go microservice in `/apps` must follow the Clean Architecture pattern:
 
 - **Toolchain Consistency**: This project uses **Nix** (`flake.nix`) to manage toolchains (Go compiler, protobuf compiler, golang-migrate, task, etc.).
 - **Usage**: Agents and developers should run inside the Nix shell (`nix develop` or `nix-shell`) to ensure environment parity and avoid host compiler version conflicts.
+- **Frontend Isolation**: The frontend in `apps/web` has its own isolated Nix environment (`flake.nix`). When working on frontend tools (like running `pnpm lint`), you must first navigate to the web directory (`cd apps/web`) and start its specific shell (`nix develop`).
 
 ---
 
@@ -70,7 +71,7 @@ We are currently working on **Phase 6 — Search + Analytics**. The task is to s
 To maintain clean architecture, strong typing, and visual usability on the Next.js frontend:
 
 ### 1. Package Manager & Shell
-- Always use **`pnpm`** inside the Nix development environment (`nix develop --command pnpm <cmd>`). Do not use `npm` or `yarn`.
+- Always use **`pnpm`** inside the `apps/web` specific Nix development environment (`cd apps/web && nix develop --command pnpm <cmd>`). Do not use `npm` or `yarn`.
 
 ### 2. Feature-based Folder Structure
 Code must be organized by domain inside `src/features/[feature-name]/`:

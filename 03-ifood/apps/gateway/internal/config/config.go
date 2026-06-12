@@ -14,6 +14,7 @@ type Config struct {
 	AnalyticsServiceAddr  string
 	OtelCollectorAddr     string
 	RedisAddr             string
+	RabbitMQURL           string
 }
 
 func Load() *Config {
@@ -62,6 +63,11 @@ func Load() *Config {
 		redisAddr = "127.0.0.1:6379"
 	}
 
+	rabbitmqURL := os.Getenv("RABBITMQ_URL")
+	if rabbitmqURL == "" {
+		rabbitmqURL = "amqp://guest:guest@127.0.0.1:5672/"
+	}
+
 	return &Config{
 		BindAddr:              bindAddr,
 		AuthServiceAddr:       authServiceAddr,
@@ -72,5 +78,6 @@ func Load() *Config {
 		AnalyticsServiceAddr:  analyticsServiceAddr,
 		OtelCollectorAddr:     otelCollectorAddr,
 		RedisAddr:             redisAddr,
+		RabbitMQURL:           rabbitmqURL,
 	}
 }

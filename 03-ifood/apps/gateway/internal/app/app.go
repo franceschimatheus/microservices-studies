@@ -226,6 +226,14 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Post("/admin/services/:name/state", systemHandler.ToggleServiceState)
 	fiberApp.Get("/admin/logs/stream", adminHandler.StreamSystemLogs)
 
+	// Playground / Debug Routes
+	debugHandler := handler.NewDebugHandler(cfg.RabbitMQURL)
+	debug := fiberApp.Group("/debug")
+	debug.Get("/500", debugHandler.Simulate500)
+	debug.Get("/400", debugHandler.Simulate400)
+	debug.Get("/latency", debugHandler.SimulateLatency)
+	debug.Post("/dlq", debugHandler.SimulateDLQ)
+
 	return &App{
 		cfg:            cfg,
 		fiberApp:       fiberApp,

@@ -98,6 +98,11 @@ func (h *NotificationHandler) HandleOrderCreated(ctx context.Context, body []byt
 
 	slog.InfoContext(ctx, "Handling order.created event for notification", "order_id", event.OrderID, "user_id", event.UserID)
 
+	if event.OrderID == "simulate-dlq-error" {
+		slog.ErrorContext(ctx, "Simulated unrecoverable error to trigger DLQ", "order_id", event.OrderID)
+		return fmt.Errorf("simulated unrecoverable error for DLQ")
+	}
+
 	duplicate, err := h.isDuplicate(ctx, "HandleOrderCreated", event.OrderID)
 	if err != nil {
 		return err
