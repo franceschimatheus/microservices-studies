@@ -18,7 +18,7 @@ export default function AdminLiveLogsPage() {
   useEffect(() => {
     if (isPaused) return;
 
-    const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+    const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8085';
     const eventSource = new EventSource(`${gatewayUrl}/admin/logs/stream`);
 
     eventSource.onmessage = (event) => {

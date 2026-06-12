@@ -392,10 +392,12 @@ services:
       - DB_DSN=postgres://analytics_user:analytics_password@postgres-analytics:5432/analytics_db?sslmode=disable
       - OTEL_COLLECTOR_ADDR=otel-collector:4317
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_ADDR=redis:6379
     depends_on:
       - postgres-analytics
       - otel-collector
       - rabbitmq
+      - redis
     restart: unless-stopped
 
 
