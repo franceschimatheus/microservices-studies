@@ -51,6 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ email, role, onLogout }) => {
             title="Go to Profile"
           >
             <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=transparent`}
                 alt="Profile"

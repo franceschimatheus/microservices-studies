@@ -7,7 +7,7 @@ interface LogEvent {
   id: string;
   type: string;
   timestamp: string;
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 export default function AdminLiveLogsPage() {

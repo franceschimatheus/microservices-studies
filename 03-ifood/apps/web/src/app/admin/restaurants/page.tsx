@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useRestaurants } from '@/features/restaurants/hooks/useRestaurants';
 import { RestaurantType, MenuItemType } from '@/features/restaurants/schemas';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/components/ui/Toast';
-import Link from 'next/link';
 import { RestaurantForm } from './components/RestaurantForm';
 import { CategoryForm } from './components/CategoryForm';
 import { MenuItemForm } from './components/MenuItemForm';

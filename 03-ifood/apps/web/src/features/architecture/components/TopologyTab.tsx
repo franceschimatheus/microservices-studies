@@ -56,7 +56,7 @@ export const TopologyTab = () => {
         <div>
           {renderHeader('Restaurant Service', '🍔')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
-            The source of truth for restaurant profiles, menus, and item availability. Emits 'menu.updated' events via the transactional outbox pattern to sync external projections.
+            The source of truth for restaurant profiles, menus, and item availability. Emits &apos;menu.updated&apos; events via the transactional outbox pattern to sync external projections.
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-auto">

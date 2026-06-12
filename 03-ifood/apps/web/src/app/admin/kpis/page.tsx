@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useKPIs } from '@/features/analytics/hooks/useKPIs';
 import Link from 'next/link';
 
