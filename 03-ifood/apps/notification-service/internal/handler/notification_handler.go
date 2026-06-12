@@ -76,6 +76,15 @@ func (h *NotificationHandler) isDuplicate(ctx context.Context, handlerName, even
 	return false, nil
 }
 
+func (h *NotificationHandler) clearIdempotency(ctx context.Context, handlerName string) {
+	messageID, ok := ctx.Value(rabbitmq.MessageIDKey).(string)
+	if !ok || messageID == "" {
+		return
+	}
+	key := fmt.Sprintf("idempotency:notification:%s:%s", handlerName, messageID)
+	h.redisClient.Del(ctx, key)
+}
+
 func (h *NotificationHandler) HandleOrderCreated(ctx context.Context, body []byte) error {
 	tr := otel.Tracer("notification-service")
 	ctx, span := tr.Start(ctx, "HandleOrderCreated")
@@ -97,14 +106,30 @@ func (h *NotificationHandler) HandleOrderCreated(ctx context.Context, body []byt
 		return nil
 	}
 
+	// Important: If we return an error later, we must clear the idempotency flag 
+	// so that the retry mechanism can attempt processing again.
+	success := false
+	defer func() {
+		if !success {
+			h.clearIdempotency(ctx, "HandleOrderCreated")
+		}
+	}()
+
 	subject := fmt.Sprintf("Order #%s Placed Successfully!", event.OrderID[:8])
 	emailBody := fmt.Sprintf("Hi! Your order #%s of total value $%.2f has been received and is awaiting payment confirmation.", event.OrderID, event.Total)
 
 	if err := h.service.SendEmail(ctx, event.UserID, subject, emailBody); err != nil {
+		slog.ErrorContext(ctx, "Failed to send email notification", "error", err)
 		return err
 	}
 
-	return h.service.PublishToSSE(ctx, event.UserID, "ORDER_CREATED", event)
+	if err := h.service.PublishToSSE(ctx, event.UserID, "ORDER_CREATED", event); err != nil {
+		slog.ErrorContext(ctx, "Failed to send push notification", "error", err)
+		return err
+	}
+
+	success = true
+	return nil
 }
 
 func (h *NotificationHandler) HandlePaymentCompleted(ctx context.Context, body []byte) error {

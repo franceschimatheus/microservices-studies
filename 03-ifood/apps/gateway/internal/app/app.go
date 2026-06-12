@@ -222,6 +222,8 @@ func New(cfg *config.Config) (*App, error) {
 	fiberApp.Get("/search", searchHandler.Search)
 	fiberApp.Get("/admin/kpis", analyticsHandler.GetKPIs)
 	fiberApp.Post("/admin/reset-system", systemHandler.ResetSystem)
+	fiberApp.Get("/admin/services/status", systemHandler.GetServiceStatuses)
+	fiberApp.Post("/admin/services/:name/state", systemHandler.ToggleServiceState)
 	fiberApp.Get("/admin/logs/stream", adminHandler.StreamSystemLogs)
 
 	return &App{

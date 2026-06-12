@@ -21,7 +21,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOWORK=off go build -o /gateway cmd/server/main.go
 
 # Final stage
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates docker-cli
 COPY --from=builder /gateway /gateway
 EXPOSE 8080
 ENTRYPOINT ["/gateway"]

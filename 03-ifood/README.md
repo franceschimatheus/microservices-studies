@@ -745,5 +745,5 @@ Every microservice in this monorepo must adhere to the following architecture pr
 6 - [x] improve system architecture explaining the core knowledge of each service in "services topology"
 7 - [x] verify if all the exchanges and queues are listed on "event choreography" section
 8 - [x] "Data Lake (Bronze $\rightarrow$ Silver $\rightarrow$ Gold)" bad utf8
-9 - try to simulate failures of services and test the retry policies, DLQs and idempotency
+9 - [x] try to simulate failures of services and test the retry policies, DLQs and idempotency
 10 - [x] try to create "real-time" log screen of what is happening on the distributed system

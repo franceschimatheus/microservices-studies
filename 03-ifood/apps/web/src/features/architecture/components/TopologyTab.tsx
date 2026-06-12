@@ -1,6 +1,46 @@
 import React from 'react';
+import { useServiceStatusesQuery } from '../queries/useServiceStatusesQuery';
+import { useToggleServiceMutation } from '../queries/useToggleServiceMutation';
 
 export const TopologyTab = () => {
+  const { data: statuses = {} } = useServiceStatusesQuery();
+  const toggleMutation = useToggleServiceMutation();
+
+  const handleToggle = (name: string) => {
+    const isRunning = statuses[name] === 'running';
+    toggleMutation.mutate({ name, action: isRunning ? 'stop' : 'start' });
+  };
+
+  const renderHeader = (title: string, icon: string, svcName: string) => {
+    const isRunning = statuses[svcName] === 'running';
+    const isUnknown = !statuses[svcName];
+
+    return (
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{icon}</span>
+          <h4 className="font-bold text-slate-100">{title}</h4>
+        </div>
+        {!isUnknown && (
+          <button
+            onClick={() => handleToggle(svcName)}
+            disabled={toggleMutation.isPending}
+            className={`w-10 h-5 rounded-full relative transition-colors ${
+              isRunning ? 'bg-emerald-500' : 'bg-red-500'
+            } ${toggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            title={isRunning ? 'Click to simulate Drop' : 'Click to start service'}
+          >
+            <div
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${
+                isRunning ? 'right-0.5' : 'left-0.5'
+              }`}
+            />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
       <div className="flex flex-col gap-6 animate-fadeIn">
     <h2 className="text-2xl font-extrabold text-indigo-300 flex items-center gap-2">
@@ -15,10 +55,7 @@ export const TopologyTab = () => {
       {/* Gateway & Core */}
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🚪</span>
-            <h4 className="font-bold text-slate-100">API Gateway</h4>
-          </div>
+          {renderHeader('API Gateway', '🚪', 'gateway')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             The single entry point for all frontend client traffic. Routes REST requests, forwards gRPC calls to internal services, handles rate-limiting, and initiates Jaeger distributed tracing spans.
           </p>
@@ -31,10 +68,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🛡️</span>
-            <h4 className="font-bold text-slate-100">Auth Service</h4>
-          </div>
+          {renderHeader('Auth Service', '🛡️', 'auth-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Manages credentials, JWT session validation, and Role-Based Access Control (RBAC). Keeps the users database fully isolated and signs secure tokens for the Gateway to verify.
           </p>
@@ -49,10 +83,7 @@ export const TopologyTab = () => {
       {/* Catalog & Search */}
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🍔</span>
-            <h4 className="font-bold text-slate-100">Restaurant Service</h4>
-          </div>
+          {renderHeader('Restaurant Service', '🍔', 'restaurant-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             The source of truth for restaurant profiles, menus, and item availability. Emits 'menu.updated' events via the transactional outbox pattern to sync external projections.
           </p>
@@ -66,10 +97,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🔍</span>
-            <h4 className="font-bold text-slate-100">Search Service</h4>
-          </div>
+          {renderHeader('Search Service', '🔍', 'search-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Consumes menu events from RabbitMQ and indexes them into OpenSearch. Provides blazing fast, typo-tolerant full-text search across all active restaurants and dishes.
           </p>
@@ -84,10 +112,7 @@ export const TopologyTab = () => {
       {/* Purchasing Flow */}
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🛒</span>
-            <h4 className="font-bold text-slate-100">Cart Service</h4>
-          </div>
+          {renderHeader('Cart Service', '🛒', 'cart-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Coordinates active shopping carts entirely in-memory using Redis. Highly performant key-value store with automatic TTL expiration to clean up abandoned sessions.
           </p>
@@ -100,10 +125,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📦</span>
-            <h4 className="font-bold text-slate-100">Order Service</h4>
-          </div>
+          {renderHeader('Order Service', '📦', 'order-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             The orchestrator of the checkout flow. Hosts order placement, state machines (PENDING → PAID → DELIVERED), and triggers async payment workflows via outbox event streams.
           </p>
@@ -117,10 +139,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">💳</span>
-            <h4 className="font-bold text-slate-100">Payment Service</h4>
-          </div>
+          {renderHeader('Payment Service', '💳', 'payment-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Asynchronously processes mock credit card charges. Executes strict idempotency checks against transaction IDs to ensure users are never double-charged during broker retries.
           </p>
@@ -134,10 +153,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">⚡</span>
-            <h4 className="font-bold text-slate-100">Delivery Service</h4>
-          </div>
+          {renderHeader('Delivery Service', '⚡', 'delivery-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Reacts to successful payments to coordinate dispatch. Simulates courier assignment and transit latency, eventually publishing completion events back to the Order Service.
           </p>
@@ -152,10 +168,7 @@ export const TopologyTab = () => {
       {/* Operations */}
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📈</span>
-            <h4 className="font-bold text-slate-100">Analytics Service</h4>
-          </div>
+          {renderHeader('Analytics Service', '📈', 'analytics-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Acts as the Data Lake sink. Silently intercepts all platform events from RabbitMQ, stores them as raw JSON (Bronze), and refines them (Silver) for KPI calculation without impacting live traffic.
           </p>
@@ -169,10 +182,7 @@ export const TopologyTab = () => {
 
       <div className="bg-slate-950/60 border border-slate-900/60 p-6 rounded-2xl hover:border-indigo-500/30 transition-all flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🔔</span>
-            <h4 className="font-bold text-slate-100">Notification Service</h4>
-          </div>
+          {renderHeader('Notification Service', '🔔', 'notification-service')}
           <p className="text-slate-400 text-xs leading-relaxed mb-4">
             Listens to critical state changes across the cluster (e.g., payment failures, delivery completions) and acts as the central hub for dispatching WebSocket alerts or emails to users.
           </p>
