@@ -12,6 +12,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
 	"analytics-service/internal/config"
@@ -31,6 +32,7 @@ type App struct {
 	db              *pgxpool.Pool
 	otelShutdown    func(context.Context) error
 	rabbitClient    *rabbitmq.Client
+	redisClient     *redis.Client
 	gRPCServer      *grpc.Server
 	workerCtxCancel context.CancelFunc
 	workerDone      chan struct{}
@@ -84,6 +86,14 @@ func New(cfg *config.Config) (*App, error) {
 		slog.Error("Failed to connect to RabbitMQ on startup", "error", err)
 	}
 
+	// Initialize Redis Client
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisAddr,
+	})
+	if err := redisClient.Ping(dbCtx).Err(); err != nil {
+		slog.Error("Failed to connect to Redis on startup", "error", err)
+	}
+
 	repo := repository.NewPostgresAnalyticsRepository(pool)
 	grpcHandler := handler.NewGrpcAnalyticsHandler(repo)
 
@@ -97,6 +107,7 @@ func New(cfg *config.Config) (*App, error) {
 		db:           pool,
 		otelShutdown: otelShutdown,
 		rabbitClient: rabbitClient,
+		redisClient:  redisClient,
 		gRPCServer:   gRPCServer,
 		workerDone:   make(chan struct{}),
 	}, nil
@@ -142,7 +153,7 @@ func (a *App) Run() error {
 	// 3. Setup components and RabbitMQ subscriber
 	repo := repository.NewPostgresAnalyticsRepository(a.db)
 	pipelineService := service.NewPipelineService(repo)
-	analyticsHandler := handler.NewAnalyticsHandler(repo)
+	analyticsHandler := handler.NewAnalyticsHandler(repo, a.redisClient)
 
 	ctx := context.Background()
 
@@ -243,6 +254,9 @@ func (a *App) Close() {
 	}
 	if a.rabbitClient != nil {
 		a.rabbitClient.Close()
+	}
+	if a.redisClient != nil {
+		a.redisClient.Close()
 	}
 	if a.otelShutdown != nil {
 		if err := a.otelShutdown(context.Background()); err != nil {

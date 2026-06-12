@@ -9,6 +9,7 @@ type Config struct {
 	DBDSN             string
 	OtelCollectorAddr string
 	RabbitMQURL       string
+	RedisAddr         string
 }
 
 func Load() *Config {
@@ -32,10 +33,16 @@ func Load() *Config {
 		rabbitMQURL = "amqp://guest:guest@127.0.0.1:5672/"
 	}
 
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "127.0.0.1:6379"
+	}
+
 	return &Config{
 		BindAddr:          bindAddr,
 		DBDSN:             dbDSN,
 		OtelCollectorAddr: otelCollectorAddr,
 		RabbitMQURL:       rabbitMQURL,
+		RedisAddr:         redisAddr,
 	}
 }

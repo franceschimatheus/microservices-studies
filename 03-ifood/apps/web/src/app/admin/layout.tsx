@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import Link from 'next/link';
-import { LayoutDashboard, Store, LineChart, BookOpen, Activity, LogOut } from 'lucide-react';
+import { LayoutDashboard, Store, LineChart, BookOpen, Activity, TerminalSquare, LogOut } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -48,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'KPIs & Insights', href: '/admin/kpis', icon: LineChart },
     { name: 'Architecture', href: '/admin/architecture', icon: BookOpen },
     { name: 'Monitoring', href: '/admin/monitoring', icon: Activity },
+    { name: 'Live Logs', href: '/admin/logs', icon: TerminalSquare },
   ];
 
   return (
