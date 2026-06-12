@@ -742,8 +742,8 @@ Every microservice in this monorepo must adhere to the following architecture pr
 3 - [x] remove "Add Restaurant" from hero section of "web"
 4 - [x] add the profile picture on the top right of the header, when the user is logged in that redirects to "/profile"
 5 - [x] improve admin console layout
-6 - improve system architecture explaining the core knowledge of each service in "services topology"
-7 - verify if all the exchanges and queues are listed on "event choreography" section
-8 - "Data Lake (Bronze $\rightarrow$ Silver $\rightarrow$ Gold)" bad utf8
+6 - [x] improve system architecture explaining the core knowledge of each service in "services topology"
+7 - [x] verify if all the exchanges and queues are listed on "event choreography" section
+8 - [x] "Data Lake (Bronze $\rightarrow$ Silver $\rightarrow$ Gold)" bad utf8
 9 - try to simulate failures of services and test the retry policies, DLQs and idempotency
 10 - try to create "real-time" log screen of what is happening on the distributed system
